@@ -84,7 +84,7 @@ export const deleteProductById = async (req, res) => {
             .request()
             .input('id', sql.Int, id)
             .query(queries.deleteProductById);
-        res.sendStatus(204);
+        res.json({ msg: "¡Usuario eliminado exitosamente!" });
     } catch (err) {
         res.status(500);
         res.send(err.message);
@@ -147,12 +147,21 @@ export const login = async (req, res) => {
             .input('email', sql.VarChar, email)
             .query(queries.login);
 
-        let r = result.recordset[0];
-        if (comparePassword(password, r.password)) {
-            res.status(200);
-            res.json(result.recordset[0]);
-        }else{
-            res.json({ msg: "Usuario y/o contraseña incorrectas" });
+        if (result.recordset.length > 0) {
+            let r = result.recordset[0];
+            if (comparePassword(password, r.password)) {
+                res.status(200);
+                res.json({
+                    id: result.recordset[0].id,
+                    nombre: result.recordset[0].nombre
+                });
+            } else {
+                res.status(400);
+                res.json({ msg: "Usuario y/o contraseña incorrectas" });
+            }
+        } else {
+            res.status(404);
+            res.json({ msg: "Usuario no existe en nuestro sistema." });
         }
     } catch (err) {
         res.status(500);
