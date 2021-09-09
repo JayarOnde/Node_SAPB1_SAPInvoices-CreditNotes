@@ -34,9 +34,9 @@ export const countUsers = async (req, res) => {
 };
 
 export const createNewUser = async (req, res) => {
-    const { nombre, email, password } = req.body;
+    const { nombre, email, password, supervisor, empresas, roles } = req.body;
 
-    if (typeof (nombre) === 'undefined' || typeof (email) === 'undefined' || typeof (password) === 'undefined') {
+    if (typeof (nombre) === 'undefined' || typeof (email) === 'undefined' || typeof (password) === 'undefined' || typeof (supervisor) === 'undefined') {
         return res.status(400).json({ msg: 'Debe de incluir todos los campos requeridos' });
     }
 
@@ -46,14 +46,58 @@ export const createNewUser = async (req, res) => {
     // We make the insert and catch if any errors
     try {
         const pool = await getConnection();
-        pool.request()
+        const result = await pool.request()
             .input('nombre', sql.VarChar, nombre)
             .input('email', sql.VarChar, email)
             .input('password', sql.VarChar, pass)
+            .input('sup', sql.BigInt, supervisor.value)
             .query(queries.addNewUser);
 
+        const user_id = result.recordset[0].id;
 
-        res.json("newproduct");
+        /************************************************************************
+         * Add roles functionality
+         ************************************************************************/
+        // Delete the roles
+        let rd = await pool.request()
+            .input('id', sql.BigInt, user_id)
+            .query(queries.deleteRolesUsuario);
+
+        // We add the roles
+        for (let i = 0; i < roles.length; i++) {
+            await pool.request()
+                .input('rol', sql.BigInt, roles[i].value)
+                .input('usuario', sql.BigInt, user_id)
+                .query(queries.addRol);
+        }
+        /************************************************************************
+         * Add roles functionality
+         ************************************************************************/
+
+        /************************************************************************
+         * Add empresas functionality
+         ************************************************************************/
+        // Delete the empresas
+        await pool.request()
+            .input('id', sql.BigInt, user_id)
+            .query(queries.deleteEmpresasUsuario);
+        // We add the empresas
+        for (let i = 0; i < empresas.length; i++) {
+            await pool.request()
+                .input('usuario', sql.BigInt, user_id)
+                .input('empresa', sql.BigInt, empresas[i].au_empresa_id)
+                .input('codigo_proveedor', sql.VarChar, empresas[i].codigo_proveedor_sap)
+                .input('nombre_proveedor', sql.VarChar, empresas[i].nombre_proveedor_sap)
+                .input('codigo_usuario', sql.VarChar, empresas[i].codigo_usuario_sap)
+                .input('nombre_usuario', sql.VarChar, empresas[i].nombre_usuario_sap)
+                .query(queries.addEmpresa);
+        }
+        /************************************************************************
+         * Add empresas functionality
+         ************************************************************************/
+
+
+        res.json({ msg: "¡Usuario creado con éxito!" });
     } catch (err) {
         res.status(500);
         res.send(err.message);
@@ -67,16 +111,39 @@ export const getUserById = async (req, res) => {
         const pool = await getConnection();
         const result = await pool
             .request()
-            .input('id', sql.Int, id)
+            .input('id', sql.BigInt, id)
             .query(queries.getUserById);
-        res.json(result.recordset[0]);
+
+        let user = result.recordset[0];
+
+        // Get user roles
+        const roles = await pool
+            .request()
+            .input('id', sql.BigInt, id)
+            .query(queries.getRolesUsuario);
+
+        user.roles = roles.recordset;
+
+        // Get user empresas
+        const empresas = await pool
+            .request()
+            .input('id', sql.BigInt, id)
+            .query(queries.getEmpresasUsuario);
+
+        user.empresas = empresas.recordset;
+
+        res.json(user);
+
+
+        // ret = "";
+        // res.json(ret);
     } catch (err) {
         res.status(500);
         res.send(err.message);
     }
 };
 
-export const deleteProductById = async (req, res) => {
+export const deleteUserById = async (req, res) => {
     const { id } = req.params;
     try {
         const pool = await getConnection();
@@ -84,6 +151,16 @@ export const deleteProductById = async (req, res) => {
             .request()
             .input('id', sql.Int, id)
             .query(queries.deleteProductById);
+
+        // Delete the roles
+        await pool.request()
+            .input('id', sql.BigInt, id)
+            .query(queries.deleteRolesUsuario);
+        // Delete the empresas
+        await pool.request()
+            .input('id', sql.BigInt, id)
+            .query(queries.deleteEmpresasUsuario);
+
         res.json({ msg: "¡Usuario eliminado exitosamente!" });
     } catch (err) {
         res.status(500);
@@ -92,46 +169,90 @@ export const deleteProductById = async (req, res) => {
 };
 
 export const updateUserById = async (req, res) => {
-    const { nombre, email, password } = req.body;
+    const { nombre, email, password, supervisor, empresas, roles } = req.body;
     const { id } = req.params;
 
     if (typeof (nombre) === 'undefined' || typeof (email) === 'undefined') {
         return res.status(400).json({ msg: 'Debe de incluir todos los campos requeridos' });
     }
 
+    let pool;
     if (typeof (password) !== 'undefined') {
         // Encrypt the password
         let pass = cryptPassword(password);
 
         try {
-            const pool = await getConnection();
+            pool = await getConnection();
             await pool
                 .request()
                 .input('nombre', sql.VarChar, nombre)
                 .input('email', sql.VarChar, email)
                 .input('password', sql.VarChar, pass)
+                .input('sup', sql.BigInt, supervisor.value)
                 .input('id', id)
                 .query(queries.updateUserById);
-            res.json({ nombre });
         } catch (err) {
             res.status(500);
             res.send(err.message);
         }
     } else {
         try {
-            const pool = await getConnection();
+            pool = await getConnection();
             await pool
                 .request()
                 .input('nombre', sql.VarChar, nombre)
                 .input('email', sql.VarChar, email)
+                .input('sup', sql.BigInt, supervisor.value)
                 .input('id', id)
                 .query(queries.updateUserNoPassById);
-            res.json({ nombre });
         } catch (err) {
             res.status(500);
             res.send(err.message);
         }
     }
+
+    /************************************************************************
+     * Add roles functionality
+     ************************************************************************/
+    // Delete the roles
+    let rd = await pool.request()
+        .input('id', sql.BigInt, id)
+        .query(queries.deleteRolesUsuario);
+
+    // We add the roles
+    for (let i = 0; i < roles.length; i++) {
+        await pool.request()
+            .input('rol', sql.BigInt, roles[i].value)
+            .input('usuario', sql.BigInt, id)
+            .query(queries.addRol);
+    }
+    /************************************************************************
+     * Add roles functionality
+     ************************************************************************/
+
+    /************************************************************************
+     * Add empresas functionality
+     ************************************************************************/
+    // Delete the empresas
+    await pool.request()
+        .input('id', sql.BigInt, id)
+        .query(queries.deleteEmpresasUsuario);
+    // We add the empresas
+    for (let i = 0; i < empresas.length; i++) {
+        await pool.request()
+            .input('usuario', sql.BigInt, id)
+            .input('empresa', sql.BigInt, empresas[i].au_empresa_id)
+            .input('codigo_proveedor', sql.VarChar, empresas[i].codigo_proveedor_sap)
+            .input('nombre_proveedor', sql.VarChar, empresas[i].nombre_proveedor_sap)
+            .input('codigo_usuario', sql.VarChar, empresas[i].codigo_usuario_sap)
+            .input('nombre_usuario', sql.VarChar, empresas[i].nombre_usuario_sap)
+            .query(queries.addEmpresa);
+    }
+    /************************************************************************
+     * Add empresas functionality
+     ************************************************************************/
+
+    res.json({ msg: "¡Usuario actualizado con éxito!" });
 };
 
 export const login = async (req, res) => {

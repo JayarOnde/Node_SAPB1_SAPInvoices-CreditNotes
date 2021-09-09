@@ -1,2 +1,3 @@
 export * from './conection';
-export { queries } from './querys';
+export * from './conection2';
+export { queries, queriesEmpresas,queriesSAP,variousQueries } from './querys';

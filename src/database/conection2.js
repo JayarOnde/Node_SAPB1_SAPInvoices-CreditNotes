@@ -1,11 +1,11 @@
 import sql from 'mssql';
 import config from '../config';
 
-const dbsettings = {
-    user: config.user,
-    password: config.password,
-    server: config.server,
-    database: config.database,
+const dbsettings2 = {
+    user: config.user2,
+    password: config.password2,
+    server: config.server2,
+    database: config.database2,
     options: {
         trustServerCertificate: true,
         encrypt: false //for azure
@@ -13,11 +13,9 @@ const dbsettings = {
     port: 1433
 };
 
-console.log(typeof process.env.DBPORT);
-
-export async function getConnection(){
+export async function getConnection2(){
     try{
-        const pool = new sql.ConnectionPool(dbsettings);
+        const pool = new sql.ConnectionPool(dbsettings2);
         pool.on('error', err => {
             console.log('sql errors', err);
         });
