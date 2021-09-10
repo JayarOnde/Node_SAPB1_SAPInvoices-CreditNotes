@@ -52,6 +52,19 @@ export const queriesEmpresas = {
     addNewEmpresa: 'insert into au_empresa (nombre,servidor_licencias,usuario_sap,contrasena_sap,segundos_espera,ruta_archivos,usuario_sql,sap_db_type,contrasena_sql,servidor_sql,codigo_empresa,moneda_local,moneda_extranjera,dias_atraso_facturacion_ruta,valor_impuesto,dias_atraso_facturacion_gastos,no_identificacion_fiscal,dia_efectivo_ajuste,remanente_nota_credito,maneja_xml,ajuste_fin_mes,control_numero_factura) values(@nombre,@servidor_licencias,@usuario_sap,@contrasena_sap,@segundos_espera,@ruta_archivos,@usuario_sql,@sap_db_type,@contrasena_sql,@servidor_sql,@codigo_empresa,@moneda_local,@moneda_extranjera,@dias_atraso_facturacion_ruta,@valor_impuesto,@dias_atraso_facturacion_gastos,@no_identificacion_fiscal,@dia_efectivo_ajuste,@remanente_nota_credito,@maneja_xml,@ajuste_fin_mes,@control_numero_factura)'
 }
 
+export const bancosQueries = {
+    getBancos: 'select id value,nombre label from au_banco',
+    getBancoById: 'select b.*,e.id id_empresa,e.nombre empresa from au_banco b left join au_empresa e on b.au_empresa_id=e.id where b.id=@id',
+    updateBancoById: 'update au_banco set nombre=@nombre, codigo_banco_sap=@codigo_banco_sap, codigo_banco_file=@codigo_banco_file, ruta_archivos=@ruta_archivos, au_empresa_id=@au_empresa_id where id=@id',
+    addNewBanco: 'insert into au_banco (nombre,codigo_banco_sap,codigo_banco_file,ruta_archivos,au_empresa_id) values (@nombre,@codigo_banco_sap,@codigo_banco_file,@ruta_archivos,@au_empresa_id);',
+    deleteBancoById: 'delete from au_banco where id=@id',
+    getCuentas: 'select c.id value,c.numero_cuenta label, b.nombre banco from au_cuenta_bancos c left join au_banco b on c.au_banco_id=b.id',
+    getCuentasById: 'select c.*,e.id id_empresa,e.nombre empresa,b.id id_banco, b.nombre banco from au_cuenta_bancos c left join au_empresa e on c.au_empresa_id=e.id left join au_banco b on c.au_banco_id=b.id where c.id=@id',
+    deleteCuentaById: 'delete from au_cuenta_bancos where id=@id',
+    updateCuentaById: 'update au_cuenta_bancos set au_empresa_id=@au_empresa_id, au_banco_id=@au_banco_id, numero_cuenta=@numero_cuenta, numero_cuenta_sap=@numero_cuenta_sap where id=@id',
+    addNewCuenta: 'insert into au_cuenta_bancos (au_empresa_id,au_banco_id,numero_cuenta,numero_cuenta_sap) values (@au_empresa_id,@au_banco_id,@numero_cuenta,@numero_cuenta_sap);',
+}
+
 export const queriesSAP = {
     getProveedoresSAP: 'select CardCode value,CardName label from OCRD',
     getUsuariosSAP: 'select SlpCode value,SlpName label from OSLP'
