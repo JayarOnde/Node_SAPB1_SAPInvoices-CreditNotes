@@ -21,13 +21,35 @@ export const variousQueries = {
 
 export const queriesEmpresas = {
     getAllEmpresas: 'select id value,nombre label from au_empresa',
-    countUsers: 'select count(1) from au_usuario',
-    addNewUser: 'insert into au_usuario (nombre,email,password) values(@nombre,@email,@password)',
-    getUserById: 'select * from au_usuario where id=@id',
-    deleteProductById: 'delete from au_usuario where id=@id',
-    updateUserById: 'update au_usuario set nombre=@nombre, email=@email, password=@password where id=@id',
-    updateUserNoPassById: 'update au_usuario set nombre=@nombre, email=@email where id=@id',
-    login: 'select id,nombre, password from au_usuario where email=@email'
+    getEmpresaById: 'select * from au_empresa where id=@id',
+    deleteProductById: 'delete from au_empresa where id=@id',
+    updateEmpresaById: `update au_empresa 
+                            set 
+                                nombre=@nombre,
+                                servidor_licencias=@servidor_licencias,
+                                usuario_sap=@usuario_sap,
+                                contrasena_sap=@contrasena_sap,
+                                segundos_espera=@segundos_espera,
+                                ruta_archivos=@ruta_archivos,
+                                usuario_sql=@usuario_sql,
+                                sap_db_type=@sap_db_type,
+                                contrasena_sql=@contrasena_sql,
+                                servidor_sql=@servidor_sql,
+                                codigo_empresa=@codigo_empresa,
+                                moneda_local=@moneda_local,
+                                moneda_extranjera=@moneda_extranjera,
+                                dias_atraso_facturacion_ruta=@dias_atraso_facturacion_ruta,
+                                valor_impuesto=@valor_impuesto,
+                                dias_atraso_facturacion_gastos=@dias_atraso_facturacion_gastos,
+                                no_identificacion_fiscal=@no_identificacion_fiscal,
+                                dia_efectivo_ajuste=@dia_efectivo_ajuste,
+                                remanente_nota_credito=@remanente_nota_credito,
+                                maneja_xml=@maneja_xml,
+                                ajuste_fin_mes=@ajuste_fin_mes,
+                                control_numero_factura=@control_numero_factura
+                            where 
+                            id=@id`,
+    addNewEmpresa: 'insert into au_empresa (nombre,servidor_licencias,usuario_sap,contrasena_sap,segundos_espera,ruta_archivos,usuario_sql,sap_db_type,contrasena_sql,servidor_sql,codigo_empresa,moneda_local,moneda_extranjera,dias_atraso_facturacion_ruta,valor_impuesto,dias_atraso_facturacion_gastos,no_identificacion_fiscal,dia_efectivo_ajuste,remanente_nota_credito,maneja_xml,ajuste_fin_mes,control_numero_factura) values(@nombre,@servidor_licencias,@usuario_sap,@contrasena_sap,@segundos_espera,@ruta_archivos,@usuario_sql,@sap_db_type,@contrasena_sql,@servidor_sql,@codigo_empresa,@moneda_local,@moneda_extranjera,@dias_atraso_facturacion_ruta,@valor_impuesto,@dias_atraso_facturacion_gastos,@no_identificacion_fiscal,@dia_efectivo_ajuste,@remanente_nota_credito,@maneja_xml,@ajuste_fin_mes,@control_numero_factura)'
 }
 
 export const queriesSAP = {

@@ -1,22 +1,15 @@
 import { Router } from 'express';
-import { getEmpresas } from '../controllers/empresa.controller'
+import { getEmpresas, getEmpresaById, updateEmpresaById, addNewEmpresa } from '../controllers/empresa.controller'
 
 const router = Router();
 
 // Routes
 router.get('/empresa', getEmpresas);
 
-// router.get('/empresa/count', countUsers);
+router.get('/empresa/:id', getEmpresaById);
 
-// router.post('/empresa', createNewUser);
+router.put('/empresa/:id', updateEmpresaById);
 
-// router.get('/empresa/:id', getUserById);
-
-// router.delete('/empresa/:id', deleteProductById);
-
-// router.put('/empresa/:id',updateUserById);
-
-// router.post('/empresa/login',login);
-
+router.post('/empresa', addNewEmpresa);
 
 export default router;

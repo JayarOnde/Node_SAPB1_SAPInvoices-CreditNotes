@@ -1,8 +1,3 @@
-/**
- * TODO
- * Validar que el registro no deje dos emails
- */
-
 import sql from 'mssql';
 import { cryptPassword, comparePassword } from './encrypt.passwords';
 import { getConnection, queries } from '../database';
