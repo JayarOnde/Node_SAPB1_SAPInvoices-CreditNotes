@@ -35,7 +35,7 @@ export const queriesEmpresas = {
                                 sap_db_type=@sap_db_type,
                                 contrasena_sql=@contrasena_sql,
                                 servidor_sql=@servidor_sql,
-                                codigo_empresa=@codigo_empresa,
+                                base_sql=@base_sql,
                                 moneda_local=@moneda_local,
                                 moneda_extranjera=@moneda_extranjera,
                                 dias_atraso_facturacion_ruta=@dias_atraso_facturacion_ruta,
@@ -46,10 +46,43 @@ export const queriesEmpresas = {
                                 remanente_nota_credito=@remanente_nota_credito,
                                 maneja_xml=@maneja_xml,
                                 ajuste_fin_mes=@ajuste_fin_mes,
-                                control_numero_factura=@control_numero_factura
+                                bd_sap=@bd_sap,
+                                label_impuesto=@label_impuesto,
+                                sap_db_type_label=@sap_db_type_label,
+                                control_numero_factura=@control_numero_factura,
+                                bancos=@bancos
                             where 
                             id=@id`,
-    addNewEmpresa: 'insert into au_empresa (nombre,servidor_licencias,usuario_sap,contrasena_sap,segundos_espera,ruta_archivos,usuario_sql,sap_db_type,contrasena_sql,servidor_sql,codigo_empresa,moneda_local,moneda_extranjera,dias_atraso_facturacion_ruta,valor_impuesto,dias_atraso_facturacion_gastos,no_identificacion_fiscal,dia_efectivo_ajuste,remanente_nota_credito,maneja_xml,ajuste_fin_mes,control_numero_factura) values(@nombre,@servidor_licencias,@usuario_sap,@contrasena_sap,@segundos_espera,@ruta_archivos,@usuario_sql,@sap_db_type,@contrasena_sql,@servidor_sql,@codigo_empresa,@moneda_local,@moneda_extranjera,@dias_atraso_facturacion_ruta,@valor_impuesto,@dias_atraso_facturacion_gastos,@no_identificacion_fiscal,@dia_efectivo_ajuste,@remanente_nota_credito,@maneja_xml,@ajuste_fin_mes,@control_numero_factura)'
+    addNewEmpresa: `insert into au_empresa (nombre,servidor_licencias,usuario_sap,contrasena_sap,segundos_espera,ruta_archivos,usuario_sql,sap_db_type,contrasena_sql,servidor_sql,base_sql,moneda_local,moneda_extranjera,dias_atraso_facturacion_ruta,valor_impuesto,dias_atraso_facturacion_gastos,no_identificacion_fiscal,dia_efectivo_ajuste,remanente_nota_credito,maneja_xml,ajuste_fin_mes,control_numero_factura,bd_sap,sap_db_type_label,label_impuesto,bancos) 
+                    values(@nombre,@servidor_licencias,@usuario_sap,@contrasena_sap,@segundos_espera,@ruta_archivos,@usuario_sql,@sap_db_type,@contrasena_sql,@servidor_sql,@base_sql,@moneda_local,@moneda_extranjera,@dias_atraso_facturacion_ruta,@valor_impuesto,@dias_atraso_facturacion_gastos,@no_identificacion_fiscal,@dia_efectivo_ajuste,@remanente_nota_credito,@maneja_xml,@ajuste_fin_mes,@control_numero_factura,@bd_sap,@sap_db_type_label,@label_impuesto,@bancos)`,
+    getSAPInfo: 'select CompnyName,MainCurncy,SysCurrncy,TaxIdNum from OADM',
+    getSAPImpuestos: `select
+                            Code + ' - ' + Name + ' (' + CAST ( CAST( Rate AS DECIMAL(16,2)) as varchar ) + ')' label,
+                            Rate value
+                        from
+                            OSTA`,
+    checkEmpresa: `select   id
+                    from    au_empresa
+                    where   base_sql=@base_sql
+                    and     servidor_sql=@servidor_sql`,
+    getBancos: `select
+                    BankCode,
+                    BankName,
+                    CountryCod,
+                    AbsEntry
+                from
+                    ODSC`,
+    getCuentas: `select
+                    Country,
+                    BankCode,
+                    Account,
+                    GLAccount
+                from
+                    DSC1
+                where
+                    Country=@CountryCod
+                and
+                    BankCode=@BankCode`
 }
 
 export const bancosQueries = {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getEmpresas, getEmpresaById, updateEmpresaById, addNewEmpresa } from '../controllers/empresa.controller'
+import { getEmpresas, getEmpresaById, updateEmpresaById, addNewEmpresa,validateEmpresaSQL } from '../controllers/empresa.controller'
 
 const router = Router();
 
@@ -11,5 +11,7 @@ router.get('/empresa/:id', getEmpresaById);
 router.put('/empresa/:id', updateEmpresaById);
 
 router.post('/empresa', addNewEmpresa);
+
+router.post('/validate-empresa-sql', validateEmpresaSQL);
 
 export default router;
