@@ -48,9 +48,40 @@ export const updateEmpresaById = async (req, res) => {
     // const { nombre, email, password, supervisor, empresas, roles } = req.body;
     const { id } = req.params;
 
+    // Validate sql parameters
+    let valSQL = await validateSQL(
+        req.body.usuario_sql,
+        req.body.base_sql,
+        req.body.contrasena_sql,
+        req.body.servidor_sql,
+    );
+    
+    if(!valSQL.valid){
+        res.status(500);
+        res.send("¡Verifique los datos de conexión SQL!");
+        return;
+    }
+
+    // validate licence parameters
+    let lic = await validateLicencia(
+        req.body.servidor_licencias,
+        req.body.base_sql,
+        req.body.usuario_sap,
+        req.body.contrasena_sap,
+        req.body.usuario_sql,
+        req.body.contrasena_sql,
+        req.body.sap_db_type,
+        req.body.servidor_sql
+    );
+    
+    if(!lic.valid){
+        res.status(500);
+        res.send(lic.msg);
+        return;
+    }
+
     let ex = await existeEmpresa(req.body.base_sql, req.body.servidor_sql);
 
-    console.log(ex,id);
     if (parseInt(ex) === parseInt(id)) {
         try {
             const pool = await getConnection();
@@ -209,6 +240,61 @@ export const validateEmpresaSQL = async (req, res) => {
     }
 };
 
+const validateSQL = async (usuario_sql, base_sql, contrasena_sql, servidor_sql) => {
+    try {
+        const dbsettings = {
+            user: usuario_sql,
+            password: contrasena_sql,
+            server: servidor_sql,
+            database: base_sql,
+            options: {
+                trustServerCertificate: true,
+                encrypt: false //for azure
+            },
+            port: 1433
+        };
+
+        const pool = new sql.ConnectionPool(dbsettings);
+        await pool.connect();
+
+        let ret = {
+            valid: true,
+            info: null,
+            impuestos: null,
+            bancos: null
+        };
+        const result = await pool
+            .request()
+            .query(queriesEmpresas.getSAPInfo);
+        ret.info = result.recordset;
+
+        const result2 = await pool
+            .request()
+            .query(queriesEmpresas.getSAPImpuestos);
+        ret.impuestos = result2.recordset;
+
+        const result3 = await pool
+            .request()
+            .query(queriesEmpresas.getBancos);
+        let bancos = result3.recordset;
+
+        for (let i = 0; i < bancos.length; i++) {
+            const result4 = await pool
+                .request()
+                .input('CountryCod', sql.VarChar, bancos[i].CountryCod)
+                .input('BankCode', sql.VarChar, bancos[i].BankCode)
+                .query(queriesEmpresas.getCuentas);
+            bancos[i].cuentas = result4.recordset;
+        }
+
+        ret.bancos = bancos;
+
+        return ret;
+    } catch (err) {
+        return { valid: false, err: err };
+    }
+};
+
 const existeEmpresa = async (base_sql, servidor_sql) => {
     try {
         const pool = await getConnection();
@@ -220,5 +306,64 @@ const existeEmpresa = async (base_sql, servidor_sql) => {
         return result.recordset[0].id;
     } catch (err) {
         return 0;
+    }
+};
+
+const validateLicencia = async (
+    servidor_licencias,
+    base_sql,
+    usuario_sap,
+    contrasena_sap,
+    usuario_sql,
+    contrasena_sql,
+    sap_db_type,
+    servidor_sql
+) => {
+
+    var axios = require('axios');
+
+    try {
+        var data = `<?xml version="1.0" encoding="utf-8"?>
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+          <soap12:Body>
+            <Login xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+              <DataBaseServer>${servidor_sql}</DataBaseServer>
+              <DataBaseName>${base_sql}</DataBaseName>
+              <DataBaseType>${sap_db_type}</DataBaseType>
+              <DataBaseUserName>${usuario_sql}</DataBaseUserName>
+              <DataBasePassword>${contrasena_sql}</DataBasePassword>
+              <CompanyUserName>${usuario_sap}</CompanyUserName>
+              <CompanyPassword>${contrasena_sap}</CompanyPassword>
+              <Language>ln_English</Language>
+              <LicenseServer>${servidor_licencias}:30000</LicenseServer>
+            </Login>
+          </soap12:Body>
+        </soap12:Envelope>`;
+
+        var config = {
+            method: 'post',
+            url: `http://${servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
+            headers: {
+                'Content-Type': 'application/soap+xml'
+            },
+            data: data
+        };
+
+        const response = await axios(config);
+
+        let xmlParser = require('xml2json');
+        let r = JSON.parse(xmlParser.toJson(response.data));
+        r = r["soap:Envelope"]["soap:Body"]["LoginResponse"]["LoginResult"];
+
+        return {
+            valid:!r.includes("Error"),
+            msg: r
+        };
+
+    } catch (err) {
+        return {
+            valid:false,
+            msg: "¡Verifique la información del servidor de licencias!"
+        };
     }
 };

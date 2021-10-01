@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { getEmpresas, getEmpresaById, updateEmpresaById, addNewEmpresa,validateEmpresaSQL, deleteEmpresaById } from '../controllers/empresa.controller'
+import { 
+    getEmpresas, 
+    getEmpresaById, 
+    updateEmpresaById, 
+    addNewEmpresa,
+    validateEmpresaSQL, 
+    deleteEmpresaById
+} from '../controllers/empresa.controller'
 
 const router = Router();
 
