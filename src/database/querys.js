@@ -22,7 +22,7 @@ export const variousQueries = {
 export const queriesEmpresas = {
     getAllEmpresas: 'select id value,nombre label from au_empresa',
     getEmpresaById: 'select * from au_empresa where id=@id',
-    deleteProductById: 'delete from au_empresa where id=@id',
+    deleteEmpresaById: 'delete from au_empresa where id=@id',
     updateEmpresaById: `update au_empresa 
                             set 
                                 nombre=@nombre,
@@ -100,5 +100,58 @@ export const bancosQueries = {
 
 export const queriesSAP = {
     getProveedoresSAP: 'select CardCode value,CardName label from OCRD',
-    getUsuariosSAP: 'select SlpCode value,SlpName label from OSLP'
+    getUsuariosSAP: 'select SlpCode value,SlpName label from OSLP',
+    getCuentasContables: `SELECT
+                            value		=	Case when levels = 1 then
+                                                LEFT(AcctCode,1)
+                                            when Postable = 'Y' then
+                                                Segment_0
+                                            else
+                                                AcctCode
+                                            end
+                        ,	label =	AcctName
+                        FROM
+                            OACT
+                        where
+                            Postable = 'Y'
+                        ORDER BY
+                            GroupMask,
+                            GrpLine`,
+    getImpuestos: `select
+                        Code + ' - ' + Name + ' (' + CAST ( CAST( Rate AS DECIMAL(16,2)) as varchar ) + ')' label,
+                        Rate value
+                    from
+                        OSTA`,
+}
+export const queriesGastos = {
+    getAllGastos: 'select id value,descripcion label from au_gasto',
+    getGastosGrupo: 'select id value,nombre label from au_gasto_grupo',
+    getGastosById: 'select * from au_gasto where id=@id',
+    getSubGastos: 'select * from au_sub_gasto where au_gasto_id=@id',
+    deleteGastoById: 'delete from au_gasto where id=@id',
+    updateGastoById: `update au_gasto 
+                        set descripcion=@descripcion, 
+                        au_gasto_grupo_id=@au_gasto_grupo_id,
+                        au_gasto_grupo_nombre=@au_gasto_grupo_nombre,
+                        depreciacion=@depreciacion,
+                        control_combustible=@control_combustible,
+                        control_kilometraje=@control_kilometraje,
+                        exento_codigo=@exento_codigo,
+                        exento_nombre=@exento_nombre,
+                        afecto_codigo=@afecto_codigo,
+                        afecto_nombre=@afecto_nombre,
+                        remanente_codigo=@remanente_codigo,
+                        remanente_nombre=@remanente_nombre,
+                        exento_impuesto_codigo=@exento_impuesto_codigo,
+                        exento_impuesto_nombre=@exento_impuesto_nombre,
+                        afecto_impuesto_codigo=@afecto_impuesto_codigo,
+                        afecto_impuesto_nombre=@afecto_impuesto_nombre,
+                        remanente_impuesto_codigo=@remanente_impuesto_codigo,
+                        remanente_impuesto_nombre=@remanente_impuesto_nombre
+                        where id=@id`,
+    deleteGastosUsuario: 'delete from au_sub_gasto where au_gasto_id= @id;',
+    addSubGasto: 'insert into au_sub_gasto (descripcion,au_gasto_id,exento,tipo,valor) values(@descripcion,@au_gasto_id,@exento,@tipo,@valor);',
+    addNewGasto: `insert into au_gasto (descripcion,au_gasto_grupo_id,au_gasto_grupo_nombre,depreciacion,control_combustible,control_kilometraje,exento_codigo,exento_nombre,afecto_codigo,afecto_nombre,remanente_codigo,remanente_nombre,exento_impuesto_codigo,exento_impuesto_nombre,afecto_impuesto_codigo,afecto_impuesto_nombre,remanente_impuesto_codigo,remanente_impuesto_nombre) 
+                    values(@descripcion,@au_gasto_grupo_id,@au_gasto_grupo_nombre,@depreciacion,@control_combustible,@control_kilometraje,@exento_codigo,@exento_nombre,@afecto_codigo,@afecto_nombre,@remanente_codigo,@remanente_nombre,@exento_impuesto_codigo,@exento_impuesto_nombre,@afecto_impuesto_codigo,@afecto_impuesto_nombre,@remanente_impuesto_codigo,@remanente_impuesto_nombre);
+                    SELECT SCOPE_IDENTITY() AS id;`,
 }

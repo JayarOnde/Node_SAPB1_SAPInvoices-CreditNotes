@@ -28,6 +28,22 @@ export const getEmpresaById = async (req, res) => {
     }
 };
 
+export const deleteEmpresaById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const pool = await getConnection();
+        const result = await pool
+            .request()
+            .input('id', sql.Int, id)
+            .query(queriesEmpresas.deleteEmpresaById);
+
+        res.json({ msg: "Empresa eliminada exitosamente!" });
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
 export const updateEmpresaById = async (req, res) => {
     // const { nombre, email, password, supervisor, empresas, roles } = req.body;
     const { id } = req.params;

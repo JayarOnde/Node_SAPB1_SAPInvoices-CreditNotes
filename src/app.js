@@ -7,6 +7,8 @@ import EmpresasRoutes from './routes/empresa.routes';
 import SAPRoutes from './routes/sap.routes';
 import variousRoutes from './routes/various.routes';
 import bancoRoutes from './routes/banco.routes';
+import gastosRoutes from './routes/gastos.routes';
+
 
 const app = express();
 
@@ -22,5 +24,6 @@ app.use(EmpresasRoutes);
 app.use(SAPRoutes);
 app.use(variousRoutes);
 app.use(bancoRoutes);
+app.use(gastosRoutes);
 
 export default app;

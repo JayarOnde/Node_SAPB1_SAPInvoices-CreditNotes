@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { getProveedoresSAP,getUsuariosSAP } from '../controllers/sap.controller'
+import { 
+    getProveedoresSAP,
+    getUsuariosSAP,
+    getCuentasContables,
+    getImpuestos
+} from '../controllers/sap.controller'
 
 const router = Router();
 
@@ -8,17 +13,9 @@ router.get('/sap/proveedores', getProveedoresSAP);
 
 router.get('/sap/usuarios', getUsuariosSAP);
 
-// router.get('/empresa/count', countUsers);
+router.get('/sap/cuentas-contables', getCuentasContables);
 
-// router.post('/empresa', createNewUser);
-
-// router.get('/empresa/:id', getUserById);
-
-// router.delete('/empresa/:id', deleteProductById);
-
-// router.put('/empresa/:id',updateUserById);
-
-// router.post('/empresa/login',login);
+router.get('/sap/impuestos', getImpuestos);
 
 
 export default router;
