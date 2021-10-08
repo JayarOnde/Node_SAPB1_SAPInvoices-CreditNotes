@@ -29,7 +29,7 @@ export const countUsers = async (req, res) => {
 };
 
 export const createNewUser = async (req, res) => {
-    const { nombre, email, password, supervisor, empresas, roles } = req.body;
+    const { nombre, email, password, supervisor, empresas, roles,presupuestos } = req.body;
 
     if (typeof (nombre) === 'undefined' || typeof (email) === 'undefined' || typeof (password) === 'undefined' || typeof (supervisor) === 'undefined') {
         return res.status(400).json({ msg: 'Debe de incluir todos los campos requeridos' });
@@ -67,6 +67,25 @@ export const createNewUser = async (req, res) => {
         }
         /************************************************************************
          * Add roles functionality
+         ************************************************************************/
+
+        /************************************************************************
+         * Add presupuestos functionality
+         ************************************************************************/
+        // Delete the roles
+        rd = await pool.request()
+            .input('id', sql.BigInt, user_id)
+            .query(queries.deletePresupuestosUsuario);
+
+        // We add the roles
+        for (let i = 0; i < presupuestos.length; i++) {
+            await pool.request()
+                .input('presupuesto', sql.BigInt, presupuestos[i].value)
+                .input('usuario', sql.BigInt, user_id)
+                .query(queries.addPresupuesto);
+        }
+        /************************************************************************
+         * Add presupuestos functionality
          ************************************************************************/
 
         /************************************************************************
@@ -127,6 +146,14 @@ export const getUserById = async (req, res) => {
 
         user.empresas = empresas.recordset;
 
+        // Get user presupuestos
+        const presupuestos = await pool
+            .request()
+            .input('id', sql.BigInt, id)
+            .query(queries.getPresupuestosUsuario);
+
+        user.presupuestos = presupuestos.recordset;
+
         res.json(user);
 
 
@@ -164,7 +191,7 @@ export const deleteUserById = async (req, res) => {
 };
 
 export const updateUserById = async (req, res) => {
-    const { nombre, email, password, supervisor, empresas, roles } = req.body;
+    const { nombre, email, password, supervisor, empresas, roles, presupuestos } = req.body;
     const { id } = req.params;
 
     if (typeof (nombre) === 'undefined' || typeof (email) === 'undefined') {
@@ -223,6 +250,25 @@ export const updateUserById = async (req, res) => {
     }
     /************************************************************************
      * Add roles functionality
+     ************************************************************************/
+
+    /************************************************************************
+     * Add presupuestos functionality
+     ************************************************************************/
+    // Delete the roles
+    rd = await pool.request()
+        .input('id', sql.BigInt, id)
+        .query(queries.deletePresupuestosUsuario);
+
+    // We add the roles
+    for (let i = 0; i < presupuestos.length; i++) {
+        await pool.request()
+            .input('presupuesto', sql.BigInt, presupuestos[i].value)
+            .input('usuario', sql.BigInt, id)
+            .query(queries.addPresupuesto);
+    }
+    /************************************************************************
+     * Add presupuestos functionality
      ************************************************************************/
 
     /************************************************************************
