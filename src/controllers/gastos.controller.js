@@ -88,7 +88,9 @@ export const updateGastoById = async (req, res) => {
         afecto_impuesto_nombre,
         remanente_impuesto_codigo,
         remanente_impuesto_nombre,
-        sub
+        sub,
+        empresa_codigo,
+        empresa_nombre
     } = req.body;
 
     const { id } = req.params;
@@ -103,6 +105,8 @@ export const updateGastoById = async (req, res) => {
         await pool
             .request()
             .input('descripcion', sql.VarChar, descripcion)
+            .input('empresa_codigo', sql.BigInt, empresa_codigo)
+            .input('empresa_nombre', sql.VarChar, empresa_nombre)
             .input('au_gasto_grupo_id', sql.BigInt, au_gasto_grupo_id)
             .input('au_gasto_grupo_nombre', sql.VarChar, au_gasto_grupo_nombre)
             .input('depreciacion', sql.TinyInt, depreciacion)
@@ -171,7 +175,9 @@ export const addNewGasto = async (req, res) => {
         afecto_impuesto_nombre,
         remanente_impuesto_codigo,
         remanente_impuesto_nombre,
-        sub
+        sub,
+        empresa_codigo,
+        empresa_nombre
     } = req.body;
 
     if (typeof (descripcion) === 'undefined') {
@@ -183,6 +189,8 @@ export const addNewGasto = async (req, res) => {
         pool = await getConnection();
         const result = await pool
             .request()
+            .input('empresa_codigo', sql.BigInt, empresa_codigo)
+            .input('empresa_nombre', sql.VarChar, empresa_nombre)
             .input('descripcion', sql.VarChar, descripcion)
             .input('au_gasto_grupo_id', sql.BigInt, au_gasto_grupo_id)
             .input('au_gasto_grupo_nombre', sql.VarChar, au_gasto_grupo_nombre)
