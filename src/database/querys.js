@@ -20,7 +20,7 @@ export const variousQueries = {
 }
 
 export const queriesEmpresas = {
-    getAllEmpresas: 'select id value,nombre label from au_empresa',
+    getAllEmpresas: 'select id value,nombre label, moneda_local,moneda_extranjera from au_empresa',
     getEmpresaById: 'select * from au_empresa where id=@id',
     deleteEmpresaById: 'delete from au_empresa where id=@id',
     updateEmpresaById: `update au_empresa 
@@ -159,14 +159,28 @@ export const queriesGastos = {
 }
 
 export const presupuestoQueries = {
-    getPresupuesto: `select id value,usuario_nombre + ' - ' + ruta_nombre label from au_presupuesto`,
-    getBancoById: 'select b.*,e.id id_empresa,e.nombre empresa from au_banco b left join au_empresa e on b.au_empresa_id=e.id where b.id=@id',
-    updateBancoById: 'update au_banco set nombre=@nombre, codigo_banco_sap=@codigo_banco_sap, codigo_banco_file=@codigo_banco_file, ruta_archivos=@ruta_archivos, au_empresa_id=@au_empresa_id where id=@id',
-    addNewBanco: 'insert into au_banco (nombre,codigo_banco_sap,codigo_banco_file,ruta_archivos,au_empresa_id) values (@nombre,@codigo_banco_sap,@codigo_banco_file,@ruta_archivos,@au_empresa_id);',
-    deleteBancoById: 'delete from au_banco where id=@id',
-    getCuentas: 'select c.id value,c.numero_cuenta label, b.nombre banco from au_cuenta_bancos c left join au_banco b on c.au_banco_id=b.id',
-    getCuentasById: 'select c.*,e.id id_empresa,e.nombre empresa,b.id id_banco, b.nombre banco from au_cuenta_bancos c left join au_empresa e on c.au_empresa_id=e.id left join au_banco b on c.au_banco_id=b.id where c.id=@id',
-    deleteCuentaById: 'delete from au_cuenta_bancos where id=@id',
-    updateCuentaById: 'update au_cuenta_bancos set au_empresa_id=@au_empresa_id, au_banco_id=@au_banco_id, numero_cuenta=@numero_cuenta, numero_cuenta_sap=@numero_cuenta_sap where id=@id',
-    addNewCuenta: 'insert into au_cuenta_bancos (au_empresa_id,au_banco_id,numero_cuenta,numero_cuenta_sap) values (@au_empresa_id,@au_banco_id,@numero_cuenta,@numero_cuenta_sap);',
+    getPresupuesto: `select id value,nombre label from au_presupuesto`,
+    getTipoGasto: 'select id value,nombre label from au_tipo_gasto',
+    getCategoriaGasto: 'select id value,nombre label from au_categoria_gasto',
+    getFrecuenciaGasto: 'select id value,nombre label from au_frecuencia_gasto',
+    deletePresupuesto: 'delete from au_presupuesto where id = @id;',
+    getPresupuestoById: 'select * from au_presupuesto where id=@id',
+    updatePresupuestoById: `update au_presupuesto 
+                        set nombre=@nombre,
+                        monto_maximo_factura=@monto_maximo_factura,
+                        moneda_codigo=@moneda_codigo,
+                        moneda_nombre=@moneda_nombre,
+                        empresa_codigo=@empresa_codigo,
+                        empresa_nombre=@empresa_nombre,
+                        tipo_gasto_codigo=@tipo_gasto_codigo,
+                        tipo_gasto_nombre=@tipo_gasto_nombre
+                        where id=@id`,
+    addNewPresupuesto: `insert into au_presupuesto (nombre,monto_maximo_factura,moneda_codigo,moneda_nombre,empresa_codigo,empresa_nombre,tipo_gasto_codigo,tipo_gasto_nombre) 
+                    values(@nombre,@monto_maximo_factura,@moneda_codigo,@moneda_nombre,@empresa_codigo,@empresa_nombre,@tipo_gasto_codigo,@tipo_gasto_nombre);
+                    SELECT SCOPE_IDENTITY() AS id;`,
+    deleteDetallePresupuesto: 'delete from au_detalle_presupuesto where au_presupuesto_id = @id;',
+    addDetallePresupuesto: ` insert into au_detalle_presupuesto (categoria_gasto_codigo,categoria_gasto_nombre,tipo_asignacion,asignacion_cantidad,asignacion_medida,frecuencia_codigo,frecuencia_nombre,au_presupuesto_id) 
+                            values(@categoria_gasto_codigo,@categoria_gasto_nombre,@tipo_asignacion,@asignacion_cantidad,@asignacion_medida,@frecuencia_codigo,@frecuencia_nombre,@au_presupuesto_id);`,
+    getDetallePresupuesto: 'select * from au_detalle_presupuesto where au_presupuesto_id=@id',
+    deletePresupuestoById: 'delete from au_presupuesto where id = @id;',
 }

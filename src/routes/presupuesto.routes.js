@@ -1,6 +1,13 @@
 import { Router } from 'express';
 import {
-    getPresupuestos
+    getCategoriaGasto,
+    getFrecuenciaGasto,
+    getPresupuestos,
+    getTipoGasto,
+    updatePresupuestoById,
+    getPresupuestoById,
+    addNewPresupuesto,
+    deletePresupuestoById
 } from '../controllers/presupuesto.controller'
 
 const router = Router();
@@ -8,23 +15,18 @@ const router = Router();
 // Routes
 router.get('/presupuestos', getPresupuestos);
 
-// router.get('/banco/:id', getBancoById);
+router.get('/presupuesto/:id', getPresupuestoById);
 
-// router.put('/banco/:id', updateBancoById);
+router.get('/tipo-gasto', getTipoGasto);
 
-// router.post('/banco', addNewBanco);
+router.get('/categoria-gasto', getCategoriaGasto);
 
-// router.delete('/bancos/:id', deleteBancoById);
+router.get('/frecuencia-gasto', getFrecuenciaGasto);
 
-// router.get('/cuentas', getCuentas);
+router.put('/presupuesto/:id', updatePresupuestoById);
 
-// router.get('/cuentas/:id', getCuentasById);
+router.post('/presupuesto', addNewPresupuesto);
 
-// router.put('/cuenta/:id', updateCuentaById);
-
-// router.post('/cuenta', addNewCuenta);
-
-// router.delete('/cuentas/:id', deleteCuentaById);
-
+router.delete('/presupuesto/:id', deletePresupuestoById);
 
 export default router;
