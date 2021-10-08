@@ -155,3 +155,16 @@ export const queriesGastos = {
                     values(@descripcion,@au_gasto_grupo_id,@au_gasto_grupo_nombre,@depreciacion,@control_combustible,@control_kilometraje,@exento_codigo,@exento_nombre,@afecto_codigo,@afecto_nombre,@remanente_codigo,@remanente_nombre,@exento_impuesto_codigo,@exento_impuesto_nombre,@afecto_impuesto_codigo,@afecto_impuesto_nombre,@remanente_impuesto_codigo,@remanente_impuesto_nombre);
                     SELECT SCOPE_IDENTITY() AS id;`,
 }
+
+export const presupuestoQueries = {
+    getPresupuesto: `select id value,usuario_nombre + ' - ' + ruta_nombre label from au_presupuesto`,
+    getBancoById: 'select b.*,e.id id_empresa,e.nombre empresa from au_banco b left join au_empresa e on b.au_empresa_id=e.id where b.id=@id',
+    updateBancoById: 'update au_banco set nombre=@nombre, codigo_banco_sap=@codigo_banco_sap, codigo_banco_file=@codigo_banco_file, ruta_archivos=@ruta_archivos, au_empresa_id=@au_empresa_id where id=@id',
+    addNewBanco: 'insert into au_banco (nombre,codigo_banco_sap,codigo_banco_file,ruta_archivos,au_empresa_id) values (@nombre,@codigo_banco_sap,@codigo_banco_file,@ruta_archivos,@au_empresa_id);',
+    deleteBancoById: 'delete from au_banco where id=@id',
+    getCuentas: 'select c.id value,c.numero_cuenta label, b.nombre banco from au_cuenta_bancos c left join au_banco b on c.au_banco_id=b.id',
+    getCuentasById: 'select c.*,e.id id_empresa,e.nombre empresa,b.id id_banco, b.nombre banco from au_cuenta_bancos c left join au_empresa e on c.au_empresa_id=e.id left join au_banco b on c.au_banco_id=b.id where c.id=@id',
+    deleteCuentaById: 'delete from au_cuenta_bancos where id=@id',
+    updateCuentaById: 'update au_cuenta_bancos set au_empresa_id=@au_empresa_id, au_banco_id=@au_banco_id, numero_cuenta=@numero_cuenta, numero_cuenta_sap=@numero_cuenta_sap where id=@id',
+    addNewCuenta: 'insert into au_cuenta_bancos (au_empresa_id,au_banco_id,numero_cuenta,numero_cuenta_sap) values (@au_empresa_id,@au_banco_id,@numero_cuenta,@numero_cuenta_sap);',
+}
