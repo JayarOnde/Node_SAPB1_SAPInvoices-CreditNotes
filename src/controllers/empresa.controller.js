@@ -1,5 +1,6 @@
 import sql from 'mssql';
 import { getConnection, queriesEmpresas } from '../database';
+
 export const getEmpresas = async (req, res) => {
     try {
         const poolE = await getConnection();
@@ -55,8 +56,8 @@ export const updateEmpresaById = async (req, res) => {
         req.body.contrasena_sql,
         req.body.servidor_sql,
     );
-    
-    if(!valSQL.valid){
+
+    if (!valSQL.valid) {
         res.status(500);
         res.send("¡Verifique los datos de conexión SQL!");
         return;
@@ -73,8 +74,8 @@ export const updateEmpresaById = async (req, res) => {
         req.body.sap_db_type,
         req.body.servidor_sql
     );
-    
-    if(!lic.valid){
+
+    if (!lic.valid) {
         res.status(500);
         res.send(lic.msg);
         return;
@@ -82,7 +83,10 @@ export const updateEmpresaById = async (req, res) => {
 
     let ex = await existeEmpresa(req.body.base_sql, req.body.servidor_sql);
 
-    if (parseInt(ex) === parseInt(id)) {
+    if (
+        parseInt(ex) === parseInt(id) ||
+        parseInt(ex) === -1
+    ) {
         try {
             const pool = await getConnection();
             await pool
@@ -112,6 +116,7 @@ export const updateEmpresaById = async (req, res) => {
                 .input('control_numero_factura', sql.TinyInt, req.body.control_numero_factura)
                 .input('label_impuesto', sql.VarChar, req.body.label_impuesto)
                 .input('sap_db_type_label', sql.VarChar, req.body.sap_db_type_label)
+                .input('ruta_archivos_bancos', sql.VarChar, req.body.ruta_archivos_bancos)
                 .input('id', id)
                 .input('bancos', req.body.bancos)
                 .query(queriesEmpresas.updateEmpresaById);
@@ -166,6 +171,7 @@ export const addNewEmpresa = async (req, res) => {
                 .input('control_numero_factura', sql.TinyInt, req.body.control_numero_factura)
                 .input('label_impuesto', sql.VarChar, req.body.label_impuesto)
                 .input('sap_db_type_label', sql.VarChar, req.body.sap_db_type_label)
+                .input('ruta_archivos_bancos', sql.VarChar, req.body.ruta_archivos_bancos)
                 .input('id', id)
                 .input('bancos', req.body.bancos)
                 .query(queriesEmpresas.addNewEmpresa);
@@ -226,9 +232,6 @@ export const validateEmpresaSQL = async (req, res) => {
                 .input('CountryCod', sql.VarChar, bancos[i].CountryCod)
                 .input('BankCode', sql.VarChar, bancos[i].BankCode)
                 .query(queriesEmpresas.getCuentas);
-            console.log(bancos[i].CountryCod);
-            console.log(bancos[i].BankCode);
-            console.log(result4);
             bancos[i].cuentas = result4.recordset;
         }
 
@@ -305,7 +308,7 @@ const existeEmpresa = async (base_sql, servidor_sql) => {
             .query(queriesEmpresas.checkEmpresa);
         return result.recordset[0].id;
     } catch (err) {
-        return 0;
+        return -1;
     }
 };
 
@@ -356,13 +359,13 @@ const validateLicencia = async (
         r = r["soap:Envelope"]["soap:Body"]["LoginResponse"]["LoginResult"];
 
         return {
-            valid:!r.includes("Error"),
+            valid: !r.includes("Error"),
             msg: r
         };
 
     } catch (err) {
         return {
-            valid:false,
+            valid: false,
             msg: "¡Verifique la información del servidor de licencias!"
         };
     }

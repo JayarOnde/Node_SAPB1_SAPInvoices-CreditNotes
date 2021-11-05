@@ -52,12 +52,13 @@ export const queriesEmpresas = {
                                 bd_sap=@bd_sap,
                                 label_impuesto=@label_impuesto,
                                 sap_db_type_label=@sap_db_type_label,
+                                ruta_archivos_bancos=@ruta_archivos_bancos,
                                 control_numero_factura=@control_numero_factura,
                                 bancos=@bancos
                             where 
                             id=@id`,
-    addNewEmpresa: `insert into au_empresa (nombre,servidor_licencias,usuario_sap,contrasena_sap,segundos_espera,ruta_archivos,usuario_sql,sap_db_type,contrasena_sql,servidor_sql,base_sql,moneda_local,moneda_extranjera,dias_atraso_facturacion_ruta,valor_impuesto,dias_atraso_facturacion_gastos,no_identificacion_fiscal,dia_efectivo_ajuste,remanente_nota_credito,maneja_xml,ajuste_fin_mes,control_numero_factura,bd_sap,sap_db_type_label,label_impuesto,bancos) 
-                    values(@nombre,@servidor_licencias,@usuario_sap,@contrasena_sap,@segundos_espera,@ruta_archivos,@usuario_sql,@sap_db_type,@contrasena_sql,@servidor_sql,@base_sql,@moneda_local,@moneda_extranjera,@dias_atraso_facturacion_ruta,@valor_impuesto,@dias_atraso_facturacion_gastos,@no_identificacion_fiscal,@dia_efectivo_ajuste,@remanente_nota_credito,@maneja_xml,@ajuste_fin_mes,@control_numero_factura,@bd_sap,@sap_db_type_label,@label_impuesto,@bancos)`,
+    addNewEmpresa: `insert into au_empresa (nombre,servidor_licencias,usuario_sap,contrasena_sap,segundos_espera,ruta_archivos,usuario_sql,sap_db_type,contrasena_sql,servidor_sql,base_sql,moneda_local,moneda_extranjera,dias_atraso_facturacion_ruta,valor_impuesto,dias_atraso_facturacion_gastos,no_identificacion_fiscal,dia_efectivo_ajuste,remanente_nota_credito,maneja_xml,ajuste_fin_mes,control_numero_factura,bd_sap,sap_db_type_label,label_impuesto,bancos,ruta_archivos_bancos) 
+                    values(@nombre,@servidor_licencias,@usuario_sap,@contrasena_sap,@segundos_espera,@ruta_archivos,@usuario_sql,@sap_db_type,@contrasena_sql,@servidor_sql,@base_sql,@moneda_local,@moneda_extranjera,@dias_atraso_facturacion_ruta,@valor_impuesto,@dias_atraso_facturacion_gastos,@no_identificacion_fiscal,@dia_efectivo_ajuste,@remanente_nota_credito,@maneja_xml,@ajuste_fin_mes,@control_numero_factura,@bd_sap,@sap_db_type_label,@label_impuesto,@bancos,@ruta_archivos_bancos)`,
     getSAPInfo: 'select CompnyName,MainCurncy,SysCurrncy,TaxIdNum from OADM',
     getSAPImpuestos: `select
                             Code + ' - ' + Name + ' (' + CAST ( CAST( Rate AS DECIMAL(16,2)) as varchar ) + ')' label,
@@ -105,18 +106,18 @@ export const queriesSAP = {
     getProveedoresSAP: 'select CardCode value,CardName label from OCRD',
     getUsuariosSAP: 'select SlpCode value,SlpName label from OSLP',
     getCuentasContables: `SELECT
-                            value		=	Case when levels = 1 then
-                                                LEFT(AcctCode,1)
-                                            when Postable = 'Y' then
-                                                Segment_0
-                                            else
-                                                AcctCode
-                                            end
-                        ,	label =	AcctName
+                            value		=	AcctCode
+                            ,   label		=	replicate('———', levels - 1) + 
+                                                Case when levels = 1 then
+                                                    LEFT(AcctCode,1)
+                                                when Postable = 'Y' then
+                                                    Segment_0
+                                                else
+                                                    AcctCode
+                                                end + ' - ' + AcctName
+                            ,  Postable
                         FROM
                             OACT
-                        where
-                            Postable = 'Y'
                         ORDER BY
                             GroupMask,
                             GrpLine`,

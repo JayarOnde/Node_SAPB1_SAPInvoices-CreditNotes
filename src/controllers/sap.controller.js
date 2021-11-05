@@ -32,7 +32,13 @@ export const getCuentasContables = async (req, res) => {
         const result = await poolS
             .request()
             .query(queriesSAP.getCuentasContables);
-        res.json(result.recordset);
+        let cuentas = result.recordset;
+
+        for(let i=0;i<cuentas.length;i++){
+            cuentas[i].isDisabled = cuentas[i].Postable !=='Y';
+        }
+
+        res.json(cuentas);
     } catch (err) {
         res.status(500);
         res.send(err.message);
