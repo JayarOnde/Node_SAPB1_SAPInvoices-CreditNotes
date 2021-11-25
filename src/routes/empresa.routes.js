@@ -5,7 +5,8 @@ import {
     updateEmpresaById, 
     addNewEmpresa,
     validateEmpresaSQL, 
-    deleteEmpresaById
+    deleteEmpresaById,
+    sendBankInfo
 } from '../controllers/empresa.controller'
 
 const router = Router();
@@ -22,5 +23,7 @@ router.post('/empresa', addNewEmpresa);
 router.delete('/empresas/:id', deleteEmpresaById);
 
 router.post('/validate-empresa-sql', validateEmpresaSQL);
+
+router.post('/send-bank-info', sendBankInfo);
 
 export default router;

@@ -117,7 +117,7 @@ const readFiles = async (bankFolder) => {
                                         console.log("Banco: ", banco);
                                         mt940.read(buffer).then((statements) => {
                                             let info = statements[0];
-                                            // console.log(info);
+                                            console.log(info);
                                             let trans = info.transactions;
 
                                             console.log("Cuenta:", info.accountId);

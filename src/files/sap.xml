@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+      <SessionID>string</SessionID>
+      <sXmlOrderObject><BOM xmlns='http://www.sap.com/SBO/DIS'><BO><AdmInfo><Object>oBankStatements</Object></AdmInfo><Documents><row><InternalNumber>2111</InternalNumber><StatementNumber>111111</StatementNumber><StatementDate>2021-11-30</StatementDate><Status>bssExecuted</Status><StartingBalanceF>0</StartingBalanceF><EndingBalanceF>2000</EndingBalanceF><Currency>Q</Currency></row></Documents><Document_Lines><row><SequenceNo>1</SequenceNo><AccountNumber>_SYS00000000099</AccountNumber><DebitAmmountFC>100</DebitAmmountFC><CreditAmountFC>0</CreditAmountFC><DueDate>20211101</DueDate><Reference>Aquí va el Reference</Reference><Details>Aquí va el details</Details></row></Document_Lines></BO></BOM></sXmlOrderObject>
+    </AddPurchaseOrder>
+  </soap:Body>
+</soap:Envelope>

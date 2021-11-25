@@ -76,6 +76,7 @@ export const updateGastoById = async (req, res) => {
         depreciacion,
         control_combustible,
         control_kilometraje,
+        lleva_subgastos,
         exento_codigo,
         exento_nombre,
         afecto_codigo,
@@ -112,6 +113,7 @@ export const updateGastoById = async (req, res) => {
             .input('depreciacion', sql.TinyInt, depreciacion)
             .input('control_combustible', sql.TinyInt, control_combustible)
             .input('control_kilometraje', sql.TinyInt, control_kilometraje)
+            .input('lleva_subgastos', sql.TinyInt, lleva_subgastos)
             .input('exento_codigo', sql.VarChar, exento_codigo)
             .input('exento_nombre', sql.VarChar, exento_nombre)
             .input('afecto_codigo', sql.VarChar, afecto_codigo)
@@ -163,6 +165,7 @@ export const addNewGasto = async (req, res) => {
         depreciacion,
         control_combustible,
         control_kilometraje,
+        lleva_subgastos,
         exento_codigo,
         exento_nombre,
         afecto_codigo,
@@ -197,6 +200,7 @@ export const addNewGasto = async (req, res) => {
             .input('depreciacion', sql.TinyInt, depreciacion)
             .input('control_combustible', sql.TinyInt, control_combustible)
             .input('control_kilometraje', sql.TinyInt, control_kilometraje)
+            .input('lleva_subgastos', sql.TinyInt, lleva_subgastos)
             .input('exento_codigo', sql.VarChar, exento_codigo)
             .input('exento_nombre', sql.VarChar, exento_nombre)
             .input('afecto_codigo', sql.VarChar, afecto_codigo)

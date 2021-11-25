@@ -370,3 +370,113 @@ const validateLicencia = async (
         };
     }
 };
+
+export const sendBankInfo = async (req, res) => {
+    const {
+        servidor_sql,
+        bd_sap,
+        sap_db_type,
+        usuario_sql,
+        contrasena_sql,
+        usuario_sap,
+        contrasena_sap,
+        servidor_licencias,
+    } = req.body;
+    try {
+        var axios = require('axios');
+
+        var data = `<?xml version="1.0" encoding="utf-8"?>
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+          <soap12:Body>
+            <Login xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+              <DataBaseServer>${servidor_sql}</DataBaseServer>
+              <DataBaseName>${bd_sap}</DataBaseName>
+              <DataBaseType>${sap_db_type}</DataBaseType>
+              <DataBaseUserName>${usuario_sql}</DataBaseUserName>
+              <DataBasePassword>${contrasena_sql}</DataBasePassword>
+              <CompanyUserName>${usuario_sap}</CompanyUserName>
+              <CompanyPassword>${contrasena_sap}</CompanyPassword>
+              <Language>ln_English</Language>
+              <LicenseServer>${servidor_licencias}:30000</LicenseServer>
+            </Login>
+          </soap12:Body>
+        </soap12:Envelope>`;
+
+
+        var config = {
+            method: 'post',
+            url: `http://${servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
+            headers: {
+                'Content-Type': 'application/soap+xml'
+            },
+            data: data
+        };
+        console.log(config);
+
+        const response = await axios(config);
+
+        let xmlParser = require('xml2json');
+        let r = JSON.parse(xmlParser.toJson(response.data));
+        r = r["soap:Envelope"]["soap:Body"]["LoginResponse"]["LoginResult"];
+
+
+        let ret;
+        if (!r.includes("Error")) {
+            let bankInfo = `<?xml version="1.0" encoding="utf-8"?>
+            <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+                <soap12:Body>
+                    <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+                    <SessionID>${r}</SessionID>
+                    <sXmlOrderObject><BOM xmlns='http://www.sap.com/SBO/DIS'><BO><AdmInfo><Object>oBankStatement</Object></AdmInfo><BankStatement xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+                    <BankAccountKey>1</BankAccountKey>
+                    <BankStatementRows>
+                        <BankStatementRow>
+                            <ExternalCode>E1</ExternalCode>
+                            <MultiplePayments>
+                                <MultiplePayment>
+                                    <AmountLC>20</AmountLC>
+                                    <IsDebit>tYes</IsDebit>
+                                </MultiplePayment>
+                            </MultiplePayments>
+                        </BankStatementRow>
+                    </BankStatementRows>
+                </BankStatement></BO></BOM></sXmlOrderObject>
+                    </AddPurchaseOrder>
+                </soap12:Body>
+            </soap12:Envelope>`;
+
+            var config = {
+                method: 'post',
+                url: `http://${servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
+                headers: {
+                    'Content-Type': 'application/soap+xml'
+                },
+                data: bankInfo
+            };
+
+            console.log(config);
+
+            const response = await axios(config);
+
+            let xmlParser = require('xml2json');
+            let r2 = JSON.parse(xmlParser.toJson(response.data));
+            console.log(r2);
+
+
+            ret = {
+                valid: !r.includes("Error"),
+                msg: r
+            };
+        } else {
+            ret = {
+                valid: !r.includes("Error"),
+                msg: r
+            };
+        }
+
+
+        res.json(ret);
+    } catch (err) {
+        res.json({ valid: false, err: err });
+    }
+};

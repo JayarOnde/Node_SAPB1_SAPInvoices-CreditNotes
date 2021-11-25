@@ -140,6 +140,7 @@ export const queriesGastos = {
                         depreciacion=@depreciacion,
                         control_combustible=@control_combustible,
                         control_kilometraje=@control_kilometraje,
+                        lleva_subgastos=@lleva_subgastos,
                         exento_codigo=@exento_codigo,
                         exento_nombre=@exento_nombre,
                         afecto_codigo=@afecto_codigo,
@@ -157,8 +158,8 @@ export const queriesGastos = {
                         where id=@id`,
     deleteGastosUsuario: 'delete from au_sub_gasto where au_gasto_id= @id;',
     addSubGasto: 'insert into au_sub_gasto (descripcion,au_gasto_id,exento,tipo,valor) values(@descripcion,@au_gasto_id,@exento,@tipo,@valor);',
-    addNewGasto: `insert into au_gasto (empresa_codigo,empresa_nombre,descripcion,au_gasto_grupo_id,au_gasto_grupo_nombre,depreciacion,control_combustible,control_kilometraje,exento_codigo,exento_nombre,afecto_codigo,afecto_nombre,remanente_codigo,remanente_nombre,exento_impuesto_codigo,exento_impuesto_nombre,afecto_impuesto_codigo,afecto_impuesto_nombre,remanente_impuesto_codigo,remanente_impuesto_nombre) 
-                    values(@empresa_codigo,@empresa_nombre,@descripcion,@au_gasto_grupo_id,@au_gasto_grupo_nombre,@depreciacion,@control_combustible,@control_kilometraje,@exento_codigo,@exento_nombre,@afecto_codigo,@afecto_nombre,@remanente_codigo,@remanente_nombre,@exento_impuesto_codigo,@exento_impuesto_nombre,@afecto_impuesto_codigo,@afecto_impuesto_nombre,@remanente_impuesto_codigo,@remanente_impuesto_nombre);
+    addNewGasto: `insert into au_gasto (empresa_codigo,empresa_nombre,descripcion,au_gasto_grupo_id,au_gasto_grupo_nombre,depreciacion,control_combustible,control_kilometraje,lleva_subgastos,exento_codigo,exento_nombre,afecto_codigo,afecto_nombre,remanente_codigo,remanente_nombre,exento_impuesto_codigo,exento_impuesto_nombre,afecto_impuesto_codigo,afecto_impuesto_nombre,remanente_impuesto_codigo,remanente_impuesto_nombre) 
+                    values(@empresa_codigo,@empresa_nombre,@descripcion,@au_gasto_grupo_id,@au_gasto_grupo_nombre,@depreciacion,@control_combustible,@control_kilometraje,@lleva_subgastos,@exento_codigo,@exento_nombre,@afecto_codigo,@afecto_nombre,@remanente_codigo,@remanente_nombre,@exento_impuesto_codigo,@exento_impuesto_nombre,@afecto_impuesto_codigo,@afecto_impuesto_nombre,@remanente_impuesto_codigo,@remanente_impuesto_nombre);
                     SELECT SCOPE_IDENTITY() AS id;`,
 }
 
