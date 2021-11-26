@@ -1,4 +1,5 @@
 import { getConnection2, queriesSAP } from '../database';
+import sql from 'mssql';
 
 export const getProveedoresSAP = async (req, res) => {
     try {
@@ -52,6 +53,60 @@ export const getImpuestos = async (req, res) => {
             .request()
             .query(queriesSAP.getImpuestos);
         res.json(result.recordset);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
+export const getProyectos = async (req, res) => {
+    try {
+        const poolS = await getConnection2();
+        const result = await poolS
+            .request()
+            .query(queriesSAP.getProyectos);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
+export const getCentrosCosto = async (req, res) => {
+    try {
+        let ret = [];
+        const poolS = await getConnection2();
+        const result1 = await poolS
+            .request()
+            .input('id', sql.Int, 1)
+            .query(queriesSAP.getCentrosCosto);
+        ret.push(result1.recordset);
+
+        const result2 = await poolS
+            .request()
+            .input('id', sql.Int, 2)
+            .query(queriesSAP.getCentrosCosto);
+        ret.push(result2.recordset);
+
+        const result3 = await poolS
+            .request()
+            .input('id', sql.Int, 3)
+            .query(queriesSAP.getCentrosCosto);
+        ret.push(result3.recordset);
+
+        const result4 = await poolS
+            .request()
+            .input('id', sql.Int, 4)
+            .query(queriesSAP.getCentrosCosto);
+        ret.push(result4.recordset);
+
+        const result5 = await poolS
+            .request()
+            .input('id', sql.Int, 5)
+            .query(queriesSAP.getCentrosCosto);
+        ret.push(result5.recordset);
+        
+        res.json(ret);
     } catch (err) {
         res.status(500);
         res.send(err.message);

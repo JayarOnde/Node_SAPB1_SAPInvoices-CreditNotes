@@ -6,8 +6,10 @@ export const queries = {
     deleteRolesUsuario: 'delete from au_usuario_rol where au_usuario_id= @id;',
     addRol: 'insert into au_usuario_rol (au_rol_id,au_usuario_id) values(@rol,@usuario);',
     getPresupuestosUsuario: 'select r.id value,r.nombre label from au_usuario_presupuesto ur join au_presupuesto r on ur.au_presupuesto_id=r.id where au_usuario_id= @id;',
-    deletePresupuestosUsuario: 'delete from au_usuario_presupuesto where au_usuario_id= @id;',
-    addPresupuesto: 'insert into au_usuario_presupuesto (au_presupuesto_id,au_usuario_id) values(@presupuesto,@usuario);',
+    deletePresupuestosUsuarioEmpresa: 'delete from au_usuario_empresa_presupuesto where au_usuario_id= @usuario and au_empresa_id=@empresa;',
+    addPresupuestoEmpresa: `insert into au_usuario_empresa_presupuesto (presupuesto,presupuesto_label,proyecto,proyecto_label,centro_c1,centro_c1_label,centro_c2,centro_c2_label,centro_c3,centro_c3_label,centro_c4,centro_c4_label,centro_c5,centro_c5_label,au_usuario_id,au_empresa_id) 
+                            values(@presupuesto,@presupuesto_label,@proyecto,@proyecto_label,@centro_c1,@centro_c1_label,@centro_c2,@centro_c2_label,@centro_c3,@centro_c3_label,@centro_c4,@centro_c4_label,@centro_c5,@centro_c5_label,@usuario,@empresa);`,
+    getPresupuestoEmpresa: `select * from au_usuario_empresa_presupuesto where au_usuario_id= @usuario and au_empresa_id=@empresa;`,
     getUserById: 'select u.*,s.nombre nombre_supervisor from au_usuario u left join au_usuario s on u.supervisor=s.id where u.id=@id',
     deleteProductById: 'delete from au_usuario where id=@id',
     updateUserById: 'update au_usuario set nombre=@nombre, email=@email, password=@password, supervisor=@sup where id=@id',
@@ -126,6 +128,18 @@ export const queriesSAP = {
                         Rate value
                     from
                         OSTA`,
+    getCentrosCosto: `select
+                                OcrCode value,
+                                OcrName label
+                            from
+                                OOCR
+                            where
+                                DimCode = @id`,
+    getProyectos: `select
+                                PrjCode value,
+                                PrjName label
+                            from
+                                OPRJ`,
 }
 export const queriesGastos = {
     getAllGastos: 'select id value,descripcion label from au_gasto',
@@ -188,4 +202,5 @@ export const presupuestoQueries = {
                             values(@categoria_gasto_codigo,@categoria_gasto_nombre,@tipo_asignacion,@asignacion_cantidad,@asignacion_medida,@frecuencia_codigo,@frecuencia_nombre,@au_presupuesto_id);`,
     getDetallePresupuesto: 'select * from au_detalle_presupuesto where au_presupuesto_id=@id',
     deletePresupuestoById: 'delete from au_presupuesto where id = @id;',
+    getPresupuestosEmpresa: 'select id value,nombre label from au_presupuesto where empresa_codigo= @id;',
 }

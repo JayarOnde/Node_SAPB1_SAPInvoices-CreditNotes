@@ -221,3 +221,19 @@ export const deletePresupuestoById = async (req, res) => {
         res.send(err.message);
     }
 };
+
+
+export const getPresupuestosEmpresa = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const poolE = await getConnection();
+        const result = await poolE
+            .request()
+            .input('id', sql.Int, id)
+            .query(presupuestoQueries.getPresupuestosEmpresa);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};

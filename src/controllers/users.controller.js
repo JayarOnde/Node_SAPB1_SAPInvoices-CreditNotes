@@ -29,7 +29,7 @@ export const countUsers = async (req, res) => {
 };
 
 export const createNewUser = async (req, res) => {
-    const { nombre, email, password, supervisor, empresas, roles,presupuestos } = req.body;
+    const { nombre, email, password, supervisor, empresas, roles, presupuestos } = req.body;
 
     if (typeof (nombre) === 'undefined' || typeof (email) === 'undefined' || typeof (password) === 'undefined' || typeof (supervisor) === 'undefined') {
         return res.status(400).json({ msg: 'Debe de incluir todos los campos requeridos' });
@@ -252,24 +252,6 @@ export const updateUserById = async (req, res) => {
      * Add roles functionality
      ************************************************************************/
 
-    /************************************************************************
-     * Add presupuestos functionality
-     ************************************************************************/
-    // Delete the roles
-    rd = await pool.request()
-        .input('id', sql.BigInt, id)
-        .query(queries.deletePresupuestosUsuario);
-
-    // We add the roles
-    for (let i = 0; i < presupuestos.length; i++) {
-        await pool.request()
-            .input('presupuesto', sql.BigInt, presupuestos[i].value)
-            .input('usuario', sql.BigInt, id)
-            .query(queries.addPresupuesto);
-    }
-    /************************************************************************
-     * Add presupuestos functionality
-     ************************************************************************/
 
     /************************************************************************
      * Add empresas functionality
@@ -325,6 +307,70 @@ export const login = async (req, res) => {
             res.status(404);
             res.json({ msg: "Usuario no existe en nuestro sistema." });
         }
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
+export const savePresupuestoEmpresa = async (req, res) => {
+    const { usuario, empresa, presupuestos } = req.body;
+
+    try {
+        /************************************************************************
+         * Add presupuestos functionality
+         ************************************************************************/
+        // Delete the presupuestos
+        const pool = await getConnection();
+        let rd = await pool.request()
+            .input('usuario', sql.BigInt, usuario)
+            .input('empresa', sql.BigInt, empresa)
+            .query(queries.deletePresupuestosUsuarioEmpresa);
+
+        // We add the presupuestos
+        for (let i = 0; i < presupuestos.length; i++) {
+            await pool.request()
+                .input('presupuesto', sql.VarChar, presupuestos[i].presupuesto)
+                .input('presupuesto_label', sql.VarChar, presupuestos[i].presupuesto_label)
+                .input('proyecto', sql.VarChar, presupuestos[i].proyecto)
+                .input('proyecto_label', sql.VarChar, presupuestos[i].proyecto_label)
+                .input('centro_c1', sql.VarChar, presupuestos[i].centro_c1)
+                .input('centro_c1_label', sql.VarChar, presupuestos[i].centro_c1_label)
+                .input('centro_c2', sql.VarChar, presupuestos[i].centro_c2)
+                .input('centro_c2_label', sql.VarChar, presupuestos[i].centro_c2_label)
+                .input('centro_c3', sql.VarChar, presupuestos[i].centro_c3)
+                .input('centro_c3_label', sql.VarChar, presupuestos[i].centro_c3_label)
+                .input('centro_c4', sql.VarChar, presupuestos[i].centro_c4)
+                .input('centro_c4_label', sql.VarChar, presupuestos[i].centro_c4_label)
+                .input('centro_c5', sql.VarChar, presupuestos[i].centro_c5)
+                .input('centro_c5_label', sql.VarChar, presupuestos[i].centro_c5_label)
+                .input('usuario', sql.VarChar, usuario)
+                .input('empresa', sql.VarChar, empresa)
+                .query(queries.addPresupuestoEmpresa);
+        }
+        /************************************************************************
+         * Add presupuestos functionality
+         ************************************************************************/
+        res.status(200);
+        res.json({
+            texto: "¡Se ha guardado el presupuesto correctamente!"
+        });
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
+export const getPresupuestoEmpresa = async (req, res) => {
+    const { usuario, empresa } = req.body;
+    try {
+        const pool = await getConnection();
+        const result = await pool
+            .request()
+            .input('usuario', sql.VarChar, usuario)
+            .input('empresa', sql.VarChar, empresa)
+            .query(queries.getPresupuestoEmpresa);
+        res.json(result.recordset);
     } catch (err) {
         res.status(500);
         res.send(err.message);
