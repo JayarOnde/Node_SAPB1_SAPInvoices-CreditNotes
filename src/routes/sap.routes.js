@@ -11,13 +11,13 @@ import {
 const router = Router();
 
 // Routes
-router.get('/sap/proveedores', getProveedoresSAP);
+router.get('/sap/proveedores/:id', getProveedoresSAP);
 
-router.get('/sap/usuarios', getUsuariosSAP);
+router.get('/sap/usuarios/:id', getUsuariosSAP);
 
-router.get('/sap/cuentas-contables', getCuentasContables);
+router.get('/sap/cuentas-contables/:id', getCuentasContables);
 
-router.get('/sap/impuestos', getImpuestos);
+router.get('/sap/impuestos/:id', getImpuestos);
 
 router.get('/sap/proyectos/:id', getProyectos);
 
