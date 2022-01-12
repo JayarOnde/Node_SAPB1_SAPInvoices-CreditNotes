@@ -9,6 +9,7 @@ import variousRoutes from './routes/various.routes';
 import bancoRoutes from './routes/banco.routes';
 import gastosRoutes from './routes/gastos.routes';
 import presupuestosRoutes from './routes/presupuesto.routes';
+import liquidacionesRoutes from './routes/liquidaciones.routes';
 
 
 const app = express();
@@ -27,5 +28,6 @@ app.use(variousRoutes);
 app.use(bancoRoutes);
 app.use(gastosRoutes);
 app.use(presupuestosRoutes);
+app.use(liquidacionesRoutes);
 
 export default app;

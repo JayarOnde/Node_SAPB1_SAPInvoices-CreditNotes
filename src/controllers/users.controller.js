@@ -59,12 +59,13 @@ export const createNewUser = async (req, res) => {
             .query(queries.deleteRolesUsuario);
 
         // We add the roles
-        for (let i = 0; i < roles.length; i++) {
-            await pool.request()
-                .input('rol', sql.BigInt, roles[i].value)
-                .input('usuario', sql.BigInt, user_id)
-                .query(queries.addRol);
-        }
+        if (typeof roles !== "undefined")
+            for (let i = 0; i < roles.length; i++) {
+                await pool.request()
+                    .input('rol', sql.BigInt, roles[i].value)
+                    .input('usuario', sql.BigInt, user_id)
+                    .query(queries.addRol);
+            }
         /************************************************************************
          * Add roles functionality
          ************************************************************************/
@@ -72,18 +73,19 @@ export const createNewUser = async (req, res) => {
         /************************************************************************
          * Add presupuestos functionality
          ************************************************************************/
-        // Delete the roles
+        // Delete the presupuestos
         rd = await pool.request()
             .input('id', sql.BigInt, user_id)
             .query(queries.deletePresupuestosUsuario);
 
-        // We add the roles
-        for (let i = 0; i < presupuestos.length; i++) {
-            await pool.request()
-                .input('presupuesto', sql.BigInt, presupuestos[i].value)
-                .input('usuario', sql.BigInt, user_id)
-                .query(queries.addPresupuesto);
-        }
+        // We add the presupuestos
+        if (typeof presupuestos !== "undefined")
+            for (let i = 0; i < presupuestos.length; i++) {
+                await pool.request()
+                    .input('presupuesto', sql.BigInt, presupuestos[i].value)
+                    .input('usuario', sql.BigInt, user_id)
+                    .query(queries.addPresupuesto);
+            }
         /************************************************************************
          * Add presupuestos functionality
          ************************************************************************/

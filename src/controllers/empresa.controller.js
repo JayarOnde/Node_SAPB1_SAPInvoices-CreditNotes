@@ -141,7 +141,10 @@ export const addNewEmpresa = async (req, res) => {
 
     let ex = await existeEmpresa(req.body.base_sql, req.body.servidor_sql);
 
-    if (parseInt(ex) === parseInt(id)) {
+    if (
+        parseInt(ex) === 0 ||
+        parseInt(ex) === parseInt(id)
+    ) {
         try {
             const pool = await getConnection();
             await pool
@@ -306,8 +309,13 @@ const existeEmpresa = async (base_sql, servidor_sql) => {
             .input('base_sql', sql.VarChar, base_sql)
             .input('servidor_sql', sql.VarChar, servidor_sql)
             .query(queriesEmpresas.checkEmpresa);
-        return result.recordset[0].id;
+        if(result.recordset.length>0){
+            return result.recordset[0].id;
+        }else{
+            return 0;
+        }
     } catch (err) {
+        console.log(err);
         return -1;
     }
 };
@@ -411,7 +419,6 @@ export const sendBankInfo = async (req, res) => {
             },
             data: data
         };
-        console.log(config);
 
         const response = await axios(config);
 
@@ -454,13 +461,11 @@ export const sendBankInfo = async (req, res) => {
                 data: bankInfo
             };
 
-            console.log(config);
 
             const response = await axios(config);
 
             let xmlParser = require('xml2json');
             let r2 = JSON.parse(xmlParser.toJson(response.data));
-            console.log(r2);
 
 
             ret = {

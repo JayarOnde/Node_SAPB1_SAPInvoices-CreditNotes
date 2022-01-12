@@ -9,7 +9,6 @@ export async function getConnection2(id) {
         .input('id', sql.BigInt, id)
         .query(queriesEmpresas.getEmpresaById);
     let r = result.recordset[0];
-    console.log(r.usuario_sql);
 
     const dbsettings2 = {
         user: r.usuario_sql,

@@ -7,5 +7,6 @@ export {
     variousQueries,
     bancosQueries,
     queriesGastos,
-    presupuestoQueries
+    presupuestoQueries,
+    liquidacionesQueries
 } from './querys';

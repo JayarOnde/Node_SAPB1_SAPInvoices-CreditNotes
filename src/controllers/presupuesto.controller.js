@@ -86,6 +86,7 @@ export const updatePresupuestoById = async (req, res) => {
         empresa_nombre,
         tipo_gasto_codigo,
         tipo_gasto_nombre,
+        activo,
         sub
     } = req.body;
 
@@ -105,6 +106,7 @@ export const updatePresupuestoById = async (req, res) => {
             .input('empresa_nombre', sql.VarChar, empresa_nombre)
             .input('tipo_gasto_codigo', sql.Int, tipo_gasto_codigo)
             .input('tipo_gasto_nombre', sql.VarChar, tipo_gasto_nombre)
+            .input('activo', sql.TinyInt, activo)
             .input('id', sql.BigInt, id)
             .query(presupuestoQueries.updatePresupuestoById);
     } catch (err) {
@@ -149,6 +151,7 @@ export const addNewPresupuesto = async (req, res) => {
         empresa_nombre,
         tipo_gasto_codigo,
         tipo_gasto_nombre,
+        activo,
         sub
     } = req.body;
 
@@ -169,6 +172,7 @@ export const addNewPresupuesto = async (req, res) => {
             .input('empresa_nombre', sql.VarChar, empresa_nombre)
             .input('tipo_gasto_codigo', sql.Int, tipo_gasto_codigo)
             .input('tipo_gasto_nombre', sql.VarChar, tipo_gasto_nombre)
+            .input('activo', sql.TinyInt, activo)
             .input('id', sql.BigInt, id)
             .query(presupuestoQueries.addNewPresupuesto);
         const id = result.recordset[0].id;
@@ -231,6 +235,22 @@ export const getPresupuestosEmpresa = async (req, res) => {
             .request()
             .input('id', sql.Int, id)
             .query(presupuestoQueries.getPresupuestosEmpresa);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
+export const getEmpresaPresupuesto = async (req, res) => {
+    const { id } = req.params;
+    console.log(id,presupuestoQueries.getEmpresaPresupuesto);
+    try {
+        const poolE = await getConnection();
+        const result = await poolE
+            .request()
+            .input('id', sql.Int, id)
+            .query(presupuestoQueries.getEmpresaPresupuesto);
         res.json(result.recordset);
     } catch (err) {
         res.status(500);

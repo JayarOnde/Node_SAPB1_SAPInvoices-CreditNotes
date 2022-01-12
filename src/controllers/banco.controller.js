@@ -146,7 +146,6 @@ export const updateCuentaById = async (req, res) => {
 
 export const addNewCuenta = async (req, res) => {
     // const { nombre, email, password, supervisor, empresas, roles } = req.body;
-    console.log(req.body);
     const { id } = req.params;
 
     try {

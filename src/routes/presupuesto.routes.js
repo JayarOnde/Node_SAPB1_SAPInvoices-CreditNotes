@@ -8,7 +8,8 @@ import {
     getPresupuestoById,
     addNewPresupuesto,
     deletePresupuestoById,
-    getPresupuestosEmpresa
+    getPresupuestosEmpresa,
+    getEmpresaPresupuesto
 } from '../controllers/presupuesto.controller'
 
 const router = Router();
@@ -31,5 +32,7 @@ router.post('/presupuesto', addNewPresupuesto);
 router.delete('/presupuesto/:id', deletePresupuestoById);
 
 router.get('/presupuestos-empresa/:id', getPresupuestosEmpresa);
+
+router.get('/empresa-by-presupuesto/:id', getEmpresaPresupuesto);
 
 export default router;

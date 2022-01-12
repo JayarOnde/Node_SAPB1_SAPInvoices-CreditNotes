@@ -18,3 +18,16 @@ export const getRoles = async (req, res) => {
     }
 };
 
+export const getProveedores = async (req, res) => {
+    try {
+        const pool = await getConnection();
+        const result = await pool
+            .request()
+            .query(variousQueries.getProveedores);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+

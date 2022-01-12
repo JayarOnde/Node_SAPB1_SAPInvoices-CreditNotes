@@ -13,7 +13,6 @@ const dbsettings = {
     port: 1433
 };
 
-console.log(typeof process.env.DBPORT);
 
 export async function getConnection(){
     try{

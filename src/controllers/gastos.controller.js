@@ -244,3 +244,20 @@ export const addNewGasto = async (req, res) => {
 
     res.json({ msg: "Gasto creado con éxito!" });
 };
+
+export const getSubGastos = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const poolE = await getConnection();
+        const result = await poolE
+            .request()
+            .input('id', sql.BigInt, id)
+            .query(queriesGastos.getSubGastosDrop);
+        let gastos = result.recordset;
+
+        res.json(gastos);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
