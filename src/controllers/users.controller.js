@@ -201,7 +201,7 @@ export const updateUserById = async (req, res) => {
     }
 
     let pool;
-    if (typeof (password) !== 'undefined') {
+    if (typeof (password) !== 'undefined' && password !== "") {
         // Encrypt the password
         let pass = cryptPassword(password);
 
@@ -299,7 +299,8 @@ export const login = async (req, res) => {
                 res.status(200);
                 res.json({
                     id: result.recordset[0].id,
-                    nombre: result.recordset[0].nombre
+                    nombre: result.recordset[0].nombre,
+                    rol: result.recordset[0].rol
                 });
             } else {
                 res.status(400);

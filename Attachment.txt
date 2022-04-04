@@ -1,0 +1,48 @@
+public xmlUpdAttachments = '<?xml version="1.0"?>
+        <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+          <env:Header>
+            <SessionID>jkz</SessionID>
+          </env:Header>
+          <env:Body>
+            <dis:AddObject xmlns:dis="http://www.sap.com/SBO/DIS">
+              <BOM>
+                <BO>
+                  <AdmInfo>
+                    <Object>oAttachments2</Object>
+                  </AdmInfo>
+                  <Attachments2/>
+                  <Attachments2_Lines> 
+                   {attachments}
+                  </Attachments2_Lines>
+                </BO>
+              </BOM>
+            </dis:AddObject>
+          </env:Body>
+        </env:Envelope>'
+
+
+
+public updateAttachments(files: any) {
+        let settings = JSON.parse(global.GlobalSettings || '[]');
+        let usoFTP = settings.find((s: any) => s.nombre === 'usoFTP').valor;
+
+        let atchString = '';
+        //console.log('usoFTP: ' + usoFTP);
+
+        atchString = '<row>' +
+            '<SourcePath>' + files.xmlRoute + '</SourcePath>' +
+            '<FileName>' + files.xmlName + '</FileName>' +
+            '<FileExtension>xml</FileExtension>' +
+            '</row>';
+
+         let replace = this.xmlUpdAttachments.replace("{attachments}", atchString);
+         return replace;
+
+    }
+	
+	
+	let updateAttachment = attachmentInterface;
+	 let xml = updateAttachment.updateAttachments(files);
+	 let response = await updateAttachment.call();
+	 
+	

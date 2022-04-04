@@ -46,7 +46,6 @@ export const deleteEmpresaById = async (req, res) => {
 };
 
 export const updateEmpresaById = async (req, res) => {
-    // const { nombre, email, password, supervisor, empresas, roles } = req.body;
     const { id } = req.params;
 
     // Validate sql parameters
@@ -83,54 +82,55 @@ export const updateEmpresaById = async (req, res) => {
 
     let ex = await existeEmpresa(req.body.base_sql, req.body.servidor_sql);
 
-    if (
-        parseInt(ex) === parseInt(id) ||
-        parseInt(ex) === -1
-    ) {
-        try {
-            const pool = await getConnection();
-            await pool
-                .request()
-                .input('nombre', sql.VarChar, req.body.nombre)
-                .input('servidor_licencias', sql.VarChar, req.body.servidor_licencias)
-                .input('usuario_sap', sql.VarChar, req.body.usuario_sap)
-                .input('contrasena_sap', sql.VarChar, req.body.contrasena_sap)
-                .input('segundos_espera', sql.VarChar, req.body.segundos_espera)
-                .input('ruta_archivos', sql.VarChar, req.body.ruta_archivos)
-                .input('usuario_sql', sql.VarChar, req.body.usuario_sql)
-                .input('sap_db_type', sql.VarChar, req.body.sap_db_type)
-                .input('contrasena_sql', sql.VarChar, req.body.contrasena_sql)
-                .input('servidor_sql', sql.VarChar, req.body.servidor_sql)
-                .input('base_sql', sql.VarChar, req.body.base_sql)
-                .input('moneda_local', sql.VarChar, req.body.moneda_local)
-                .input('moneda_extranjera', sql.VarChar, req.body.moneda_extranjera)
-                .input('dias_atraso_facturacion_ruta', sql.Int, req.body.dias_atraso_facturacion_ruta)
-                .input('valor_impuesto', sql.Int, req.body.valor_impuesto)
-                .input('dias_atraso_facturacion_gastos', sql.Int, req.body.dias_atraso_facturacion_gastos)
-                .input('no_identificacion_fiscal', sql.VarChar, req.body.no_identificacion_fiscal)
-                .input('dia_efectivo_ajuste', sql.Int, req.body.dia_efectivo_ajuste)
-                .input('remanente_nota_credito', sql.TinyInt, req.body.remanente_nota_credito)
-                .input('maneja_xml', sql.TinyInt, req.body.maneja_xml)
-                .input('ajuste_fin_mes', sql.TinyInt, req.body.ajuste_fin_mes)
-                .input('bd_sap', sql.VarChar, req.body.bd_sap)
-                .input('control_numero_factura', sql.TinyInt, req.body.control_numero_factura)
-                .input('label_impuesto', sql.VarChar, req.body.label_impuesto)
-                .input('sap_db_type_label', sql.VarChar, req.body.sap_db_type_label)
-                .input('ruta_archivos_bancos', sql.VarChar, req.body.ruta_archivos_bancos)
-                .input('id', id)
-                .input('bancos', req.body.bancos)
-                .query(queriesEmpresas.updateEmpresaById);
+    // if (
+    //     parseInt(ex) === parseInt(id) ||
+    //     parseInt(ex) === -1
+    // ) {
+    try {
+        const pool = await getConnection();
+        await pool
+            .request()
+            .input('nombre', sql.VarChar, req.body.nombre)
+            .input('servidor_licencias', sql.VarChar, req.body.servidor_licencias)
+            .input('usuario_sap', sql.VarChar, req.body.usuario_sap)
+            .input('contrasena_sap', sql.VarChar, req.body.contrasena_sap)
+            .input('segundos_espera', sql.VarChar, req.body.segundos_espera)
+            .input('ruta_archivos', sql.VarChar, req.body.ruta_archivos)
+            .input('usuario_sql', sql.VarChar, req.body.usuario_sql)
+            .input('sap_db_type', sql.VarChar, req.body.sap_db_type)
+            .input('contrasena_sql', sql.VarChar, req.body.contrasena_sql)
+            .input('servidor_sql', sql.VarChar, req.body.servidor_sql)
+            .input('base_sql', sql.VarChar, req.body.base_sql)
+            .input('moneda_local', sql.VarChar, req.body.moneda_local)
+            .input('moneda_extranjera', sql.VarChar, req.body.moneda_extranjera)
+            .input('dias_atraso_facturacion_ruta', sql.Int, req.body.dias_atraso_facturacion_ruta)
+            .input('valor_impuesto', sql.Int, req.body.valor_impuesto)
+            .input('dias_atraso_facturacion_gastos', sql.Int, req.body.dias_atraso_facturacion_gastos)
+            .input('no_identificacion_fiscal', sql.VarChar, req.body.no_identificacion_fiscal)
+            .input('dia_efectivo_ajuste', sql.Int, req.body.dia_efectivo_ajuste)
+            .input('remanente_nota_credito', sql.TinyInt, req.body.remanente_nota_credito)
+            .input('maneja_xml', sql.TinyInt, req.body.maneja_xml)
+            .input('ajuste_fin_mes', sql.TinyInt, req.body.ajuste_fin_mes)
+            .input('bd_sap', sql.VarChar, req.body.bd_sap)
+            .input('control_numero_factura', sql.TinyInt, req.body.control_numero_factura)
+            .input('label_impuesto', sql.VarChar, req.body.label_impuesto)
+            .input('sap_db_type_label', sql.VarChar, req.body.sap_db_type_label)
+            .input('ruta_archivos_bancos', sql.VarChar, req.body.ruta_archivos_bancos)
+            .input('id', id)
+            .input('bancos', req.body.bancos)
+            .query(queriesEmpresas.updateEmpresaById);
 
-            res.json({ msg: "¡Empresa actualizada con éxito!" });
+        res.json({ msg: "¡Empresa actualizada con éxito!" });
 
-        } catch (err) {
-            res.status(500);
-            res.send(err.message);
-        }
-    } else {
+    } catch (err) {
         res.status(500);
-        res.send("Ya existe un usuario con estos datos");
+        res.send(err.message);
     }
+    // } else {
+    //     console.log(ex, id);
+    //     res.status(500);
+    //     res.send("Ya existe un usuario con estos datos");
+    // }
 
 
 };
@@ -309,9 +309,9 @@ const existeEmpresa = async (base_sql, servidor_sql) => {
             .input('base_sql', sql.VarChar, base_sql)
             .input('servidor_sql', sql.VarChar, servidor_sql)
             .query(queriesEmpresas.checkEmpresa);
-        if(result.recordset.length>0){
+        if (result.recordset.length > 0) {
             return result.recordset[0].id;
-        }else{
+        } else {
             return 0;
         }
     } catch (err) {

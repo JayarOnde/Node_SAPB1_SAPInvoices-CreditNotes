@@ -9,13 +9,16 @@ import {
     addNewPresupuesto,
     deletePresupuestoById,
     getPresupuestosEmpresa,
-    getEmpresaPresupuesto
+    getEmpresaPresupuesto,
+    getPresupuestoUsuario
 } from '../controllers/presupuesto.controller'
 
 const router = Router();
 
 // Routes
 router.get('/presupuestos', getPresupuestos);
+
+router.get('/presupuestos-usuario/:id', getPresupuestoUsuario);
 
 router.get('/presupuesto/:id', getPresupuestoById);
 

@@ -91,7 +91,8 @@ export const updateGastoById = async (req, res) => {
         remanente_impuesto_nombre,
         sub,
         empresa_codigo,
-        empresa_nombre
+        empresa_nombre,
+        ignorar_xml
     } = req.body;
 
     const { id } = req.params;
@@ -126,6 +127,7 @@ export const updateGastoById = async (req, res) => {
             .input('afecto_impuesto_nombre', sql.VarChar, afecto_impuesto_nombre)
             .input('remanente_impuesto_codigo', sql.VarChar, remanente_impuesto_codigo)
             .input('remanente_impuesto_nombre', sql.VarChar, remanente_impuesto_nombre)
+            .input('ignorar_xml', sql.TinyInt, ignorar_xml)
             .input('id', id)
             .query(queriesGastos.updateGastoById);
     } catch (err) {
@@ -141,16 +143,17 @@ export const updateGastoById = async (req, res) => {
         .input('id', sql.BigInt, id)
         .query(queriesGastos.deleteGastosUsuario);
 
-    // We add the roles
-    for (let i = 0; i < sub.length; i++) {
-        await pool.request()
-            .input('descripcion', sql.VarChar, sub[i].descripcion)
-            .input('exento', sql.TinyInt, sub[i].exento)
-            .input('tipo', sql.VarChar, sub[i].tipo)
-            .input('valor', sql.VarChar, sub[i].valor)
-            .input('au_gasto_id', sql.BigInt, id)
-            .query(queriesGastos.addSubGasto);
-    }
+    // We add subgastos
+    if (lleva_subgastos === 1)
+        for (let i = 0; i < sub.length; i++) {
+            await pool.request()
+                .input('descripcion', sql.VarChar, sub[i].descripcion)
+                .input('exento', sql.TinyInt, sub[i].exento)
+                .input('tipo', sql.VarChar, sub[i].tipo)
+                .input('valor', sql.VarChar, sub[i].valor)
+                .input('au_gasto_id', sql.BigInt, id)
+                .query(queriesGastos.addSubGasto);
+        }
     /************************************************************************
      * Add sub gastos functionality
      ************************************************************************/
@@ -180,7 +183,8 @@ export const addNewGasto = async (req, res) => {
         remanente_impuesto_nombre,
         sub,
         empresa_codigo,
-        empresa_nombre
+        empresa_nombre,
+        ignorar_xml
     } = req.body;
 
     if (typeof (descripcion) === 'undefined') {
@@ -213,6 +217,7 @@ export const addNewGasto = async (req, res) => {
             .input('afecto_impuesto_nombre', sql.VarChar, afecto_impuesto_nombre)
             .input('remanente_impuesto_codigo', sql.VarChar, remanente_impuesto_codigo)
             .input('remanente_impuesto_nombre', sql.VarChar, remanente_impuesto_nombre)
+            .input('ignorar_xml', sql.TinyInt, ignorar_xml)
             .query(queriesGastos.addNewGasto);
         const id = result.recordset[0].id;
 

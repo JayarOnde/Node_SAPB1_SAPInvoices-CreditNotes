@@ -14,6 +14,21 @@ export const getPresupuestos = async (req, res) => {
     }
 };
 
+export const getPresupuestoUsuario = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const poolE = await getConnection();
+        const result = await poolE
+            .request()
+            .input('user', sql.BigInt, id)
+            .query(presupuestoQueries.getPresupuestoUsuario);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500);
+        res.send(err.message);
+    }
+};
+
 export const getTipoGasto = async (req, res) => {
     try {
         const poolE = await getConnection();
@@ -121,7 +136,7 @@ export const updatePresupuestoById = async (req, res) => {
         .input('id', sql.BigInt, id)
         .query(presupuestoQueries.deleteDetallePresupuesto);
 
-    // We add the roles
+    // We add the sub gastos
     for (let i = 0; i < sub.length; i++) {
         await pool.request()
             .input('categoria_gasto_codigo', sql.VarChar, sub[i].categoria_gasto_codigo)
@@ -202,12 +217,12 @@ export const addNewPresupuesto = async (req, res) => {
         /************************************************************************
          * Add detalle presupuesto functionality
          ************************************************************************/
+        res.json({ msg: "¡Presupuesto creado con éxito!", id: id });
     } catch (err) {
         res.status(500);
         res.send(err.message);
     }
 
-    res.json({ msg: "¡Presupuesto creado con éxito!" });
 };
 
 export const deletePresupuestoById = async (req, res) => {
@@ -244,7 +259,7 @@ export const getPresupuestosEmpresa = async (req, res) => {
 
 export const getEmpresaPresupuesto = async (req, res) => {
     const { id } = req.params;
-    console.log(id,presupuestoQueries.getEmpresaPresupuesto);
+    // console.log(id,presupuestoQueries.getEmpresaPresupuesto);
     try {
         const poolE = await getConnection();
         const result = await poolE

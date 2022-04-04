@@ -14,7 +14,15 @@ export const queries = {
     deleteProductById: 'delete from au_usuario where id=@id',
     updateUserById: 'update au_usuario set nombre=@nombre, email=@email, password=@password, supervisor=@sup where id=@id',
     updateUserNoPassById: 'update au_usuario set nombre=@nombre, email=@email, supervisor=@sup where id=@id',
-    login: 'select id,nombre, password from au_usuario where email=@email',
+    login: `select
+                u.id,
+                u.nombre,
+                u.password,
+                ar.nombre rol
+            from
+                au_usuario u
+            join au_usuario_rol aur  on u.id = aur.au_usuario_id 
+            join au_rol ar on aur.au_rol_id = ar.id  where email=@email`,
     deleteEmpresasUsuario: 'delete from au_usuario_empresa where au_usuario_id= @id;',
     addEmpresa: 'insert into au_usuario_empresa (au_usuario_id,au_empresa_id,codigo_proveedor_sap,nombre_proveedor_sap,codigo_usuario_sap,nombre_usuario_sap) values(@usuario,@empresa,@codigo_proveedor,@nombre_proveedor,@codigo_usuario,@nombre_usuario);',
     getEmpresasUsuario: 'select ue.*,e.nombre nombre_empresa from au_usuario_empresa ue left join au_empresa e on ue.au_empresa_id=e.id where au_usuario_id= @id;'
@@ -22,7 +30,9 @@ export const queries = {
 
 export const variousQueries = {
     getRoles: 'select id value,nombre label from au_rol',
-    getProveedores: `select id value,nombre + ' (' + nit + ')' label from au_proveedor`,
+    getProveedores: `select id value,nombre + ' (' + nit + ')' label,nombre,nit from au_proveedor`,
+    insertProveedor: `insert into au_proveedor(nit,nombre,tipo_proveedor) values (@nit,@nombre,@tipo_proveedor); SELECT SCOPE_IDENTITY() AS id;`,
+    proveedorExists: `select 1 from au_proveedor where nit=@nit;`,
 }
 
 export const queriesEmpresas = {
@@ -82,7 +92,7 @@ export const queriesEmpresas = {
     getCuentas: `select
                     Country,
                     BankCode,
-                    Account,
+                    Account = IBAN,
                     GLAccount
                 from
                     DSC1
@@ -143,11 +153,25 @@ export const queriesSAP = {
                                 OPRJ`,
 }
 export const queriesGastos = {
-    getAllGastos: 'select id value,descripcion label from au_gasto',
-    getGastosGrupo: 'select id value,nombre label from au_gasto_grupo',
+    getAllGastos: `select 
+                        id value,
+                        descripcion label, 
+                        ignorar_xml, 
+                        depreciacion,
+                        control_combustible,
+                        control_kilometraje,
+                        empresa_codigo,
+                        empresa_nombre
+                    from 
+                        au_gasto`,
+    getGastosGrupo: `select 
+                            id value,
+                            nombre label 
+                        from 
+                            au_gasto_grupo`,
     getGastosById: 'select * from au_gasto where id=@id',
     getSubGastos: 'select * from au_sub_gasto where au_gasto_id=@id',
-    getSubGastosDrop: 'select id value,descripcion label from au_sub_gasto where au_gasto_id=@id',
+    getSubGastosDrop: 'select id value,descripcion label,* from au_sub_gasto where au_gasto_id=@id',
     deleteGastoById: 'delete from au_gasto where id=@id',
     updateGastoById: `update au_gasto 
                         set descripcion=@descripcion, 
@@ -170,17 +194,35 @@ export const queriesGastos = {
                         remanente_impuesto_codigo=@remanente_impuesto_codigo,
                         remanente_impuesto_nombre=@remanente_impuesto_nombre,
                         empresa_codigo=@empresa_codigo,
-                        empresa_nombre=@empresa_nombre
+                        empresa_nombre=@empresa_nombre,
+                        ignorar_xml=@ignorar_xml
                         where id=@id`,
     deleteGastosUsuario: 'delete from au_sub_gasto where au_gasto_id= @id;',
     addSubGasto: 'insert into au_sub_gasto (descripcion,au_gasto_id,exento,tipo,valor) values(@descripcion,@au_gasto_id,@exento,@tipo,@valor);',
-    addNewGasto: `insert into au_gasto (empresa_codigo,empresa_nombre,descripcion,au_gasto_grupo_id,au_gasto_grupo_nombre,depreciacion,control_combustible,control_kilometraje,lleva_subgastos,exento_codigo,exento_nombre,afecto_codigo,afecto_nombre,remanente_codigo,remanente_nombre,exento_impuesto_codigo,exento_impuesto_nombre,afecto_impuesto_codigo,afecto_impuesto_nombre,remanente_impuesto_codigo,remanente_impuesto_nombre) 
-                    values(@empresa_codigo,@empresa_nombre,@descripcion,@au_gasto_grupo_id,@au_gasto_grupo_nombre,@depreciacion,@control_combustible,@control_kilometraje,@lleva_subgastos,@exento_codigo,@exento_nombre,@afecto_codigo,@afecto_nombre,@remanente_codigo,@remanente_nombre,@exento_impuesto_codigo,@exento_impuesto_nombre,@afecto_impuesto_codigo,@afecto_impuesto_nombre,@remanente_impuesto_codigo,@remanente_impuesto_nombre);
+    addNewGasto: `insert into au_gasto (empresa_codigo,empresa_nombre,descripcion,au_gasto_grupo_id,au_gasto_grupo_nombre,depreciacion,control_combustible,control_kilometraje,lleva_subgastos,exento_codigo,exento_nombre,afecto_codigo,afecto_nombre,remanente_codigo,remanente_nombre,exento_impuesto_codigo,exento_impuesto_nombre,afecto_impuesto_codigo,afecto_impuesto_nombre,remanente_impuesto_codigo,remanente_impuesto_nombre,ignorar_xml) 
+                    values(@empresa_codigo,@empresa_nombre,@descripcion,@au_gasto_grupo_id,@au_gasto_grupo_nombre,@depreciacion,@control_combustible,@control_kilometraje,@lleva_subgastos,@exento_codigo,@exento_nombre,@afecto_codigo,@afecto_nombre,@remanente_codigo,@remanente_nombre,@exento_impuesto_codigo,@exento_impuesto_nombre,@afecto_impuesto_codigo,@afecto_impuesto_nombre,@remanente_impuesto_codigo,@remanente_impuesto_nombre,@ignorar_xml);
                     SELECT SCOPE_IDENTITY() AS id;`,
 }
 
 export const presupuestoQueries = {
-    getPresupuesto: `select id value,nombre label,activo,empresa_codigo empresa from au_presupuesto`,
+    getPresupuesto: `select 
+                            id value,
+                            nombre label,
+                            activo,
+                            empresa_codigo empresa, 
+                            empresa_nombre 
+                        from 
+                            au_presupuesto`,
+    getPresupuestoUsuario: `select 
+                                p.id value,
+                                nombre + ' (' + empresa_nombre + ')' label,
+                                activo,
+                                empresa_codigo empresa
+                            from 
+                                au_presupuesto p
+                            join au_usuario_empresa aue 
+                            on p.empresa_codigo = aue.au_empresa_id
+                            where aue.au_usuario_id = @user`,
     getTipoGasto: 'select id value,nombre label from au_tipo_gasto',
     getCategoriaGasto: 'select id value,nombre label from au_categoria_gasto',
     getFrecuenciaGasto: 'select id value,nombre label from au_frecuencia_gasto',
@@ -198,12 +240,16 @@ export const presupuestoQueries = {
                         tipo_gasto_nombre=@tipo_gasto_nombre
                         where id=@id`,
     addNewPresupuesto: `insert into au_presupuesto (nombre,monto_maximo_factura,moneda_codigo,moneda_nombre,empresa_codigo,empresa_nombre,tipo_gasto_codigo,tipo_gasto_nombre,activo) 
-                    values(@nombre,@monto_maximo_factura,@moneda_codigo,@moneda_nombre,@empresa_codigo,@empresa_nombre,@tipo_gasto_codigo,@tipo_gasto_nombre,activo);
+                    values(@nombre,@monto_maximo_factura,@moneda_codigo,@moneda_nombre,@empresa_codigo,@empresa_nombre,@tipo_gasto_codigo,@tipo_gasto_nombre,@activo);
                     SELECT SCOPE_IDENTITY() AS id;`,
     deleteDetallePresupuesto: 'delete from au_detalle_presupuesto where au_presupuesto_id = @id;',
     addDetallePresupuesto: ` insert into au_detalle_presupuesto (categoria_gasto_codigo,categoria_gasto_nombre,tipo_asignacion,asignacion_cantidad,asignacion_medida,frecuencia_codigo,frecuencia_nombre,au_presupuesto_id) 
                             values(@categoria_gasto_codigo,@categoria_gasto_nombre,@tipo_asignacion,@asignacion_cantidad,@asignacion_medida,@frecuencia_codigo,@frecuencia_nombre,@au_presupuesto_id);`,
-    getDetallePresupuesto: 'select * from au_detalle_presupuesto where au_presupuesto_id=@id',
+    getGastosByUserLiquidacion: `select * 
+                                    from 
+                                        au_detalle_presupuesto 
+                                    where 
+                                        au_presupuesto_id=@id`,
     deletePresupuestoById: 'delete from au_presupuesto where id = @id;',
     getPresupuestosEmpresa: 'select id value,nombre label from au_presupuesto where empresa_codigo= @id;',
     getEmpresaPresupuesto: `select
@@ -214,14 +260,42 @@ export const presupuestoQueries = {
                                 p.empresa_codigo = e.id
                             where
                                 p.id = @id`,
+    getDetallePresupuesto: `select
+                                *
+                            from 
+                                au_detalle_presupuesto
+                            where
+                                au_presupuesto_id=@id`,
 }
 
 export const liquidacionesQueries = {
-    getLiquidaciones: `select id value,convert(varchar, fecha_inicio,101) label,convert(varchar, fecha_fin,101) fecha_fin from au_liquidacion`,
+    getLiquidaciones: `select 
+                            l.id value,
+                            convert(varchar, fecha_inicio,101) label,
+                            convert(varchar, fecha_fin,101) fecha_fin,
+                            au_estado_liquidacion_id,
+                            total_facturado,
+                            no_aplica,
+                            reembolso,
+                            au.nombre  usuario
+                        from 
+                            au_liquidacion l
+                        join au_usuario au 
+                        on 
+                            l.au_usuario_id =au.id`,
     addLiquidacion: `insert into au_liquidacion (au_usuario_id,au_gasto_id,au_gasto_label,fecha_inicio,fecha_fin,total_facturado,no_aplica,reembolso,comentario)
                       values (@au_usuario_id,@au_gasto_id,@au_gasto_label,@fecha_inicio,@fecha_fin,@total_facturado,@no_aplica,@reembolso,@comentario);SELECT SCOPE_IDENTITY() AS id;`,
-    getLiquidacionById: 'select * from au_liquidacion where id=@id',
-    updateLiquidacionById: `update au_liquidacion set 
+    getLiquidacionById: `select
+                            l.*,
+                            u.nombre
+                        from
+                            au_liquidacion l
+                        inner join au_usuario u 
+                            on
+                            l.au_usuario_id = u.id
+                        where
+                            l.id = @id`,
+    updateLiquidacionByIdPrincipal: `update au_liquidacion set 
                                 au_usuario_id=@au_usuario_id,
                                 au_gasto_id=@au_gasto_id,
                                 au_gasto_label=@au_gasto_label,
@@ -232,5 +306,273 @@ export const liquidacionesQueries = {
                                 reembolso=@reembolso,
                                 comentario=@comentario
                             where id=@id`,
+    deleteFacturas: `delete from au_liquidacion_detalle
+                     where au_liquidacion_id=@au_liquidacion_id`,
+    deleteFacturaById: `delete from au_liquidacion_detalle
+                     where id=@id`,
+    addFactura: `INSERT INTO au_liquidacion_detalle
+                (gasto_value, gasto_label, sub_gasto_value, sub_gasto_label, proveedor_value, proveedor_label, [date], total, moneda, serie, numero, uuid, forma_pago, metodo_pago, cfdi, km_inicial, km_final, cantidad, factura, [xml], au_liquidacion_id,comentarios,periodicidad,del,al,au_presupuesto_id,au_detalle_presupuesto_id,tipo,presupuesto_monto,reembolso,remanente,exento,afecto,au_usuario_id)
+                VALUES(@gasto_value,@gasto_label,@sub_gasto_value,@sub_gasto_label,@proveedor_value,@proveedor_label,@date,@total,@moneda,@serie,@numero,@uuid,@forma_pago,@metodo_pago,@cfdi,@km_inicial,@km_final,@cantidad,@factura,@xml,@au_liquidacion_id,@comentarios,@periodicidad,@del,@al,@au_presupuesto_id,@au_detalle_presupuesto_id,@tipo,@presupuesto_monto,@reembolso,@remanente,@exento,@afecto,@au_usuario_id);`,
+    getFacturas: `select 
+                        gasto_value, 
+                        gasto_label, 
+                        sub_gasto_value, 
+                        sub_gasto_label, 
+                        proveedor_value, 
+                        proveedor_label, 
+                        convert(varchar, [date], 105) date,
+                        total, 
+                        moneda, 
+                        serie, 
+                        numero, 
+                        uuid, 
+                        forma_pago, 
+                        metodo_pago, 
+                        cfdi, 
+                        km_inicial, 
+                        km_final, 
+                        cantidad, 
+                        factura, 
+                        [xml], 
+                        au_liquidacion_id,
+                        comentarios,
+                        id,
+                        periodicidad,
+                        convert(varchar, [del], 105) del,
+                        convert(varchar, [al], 105) al,
+                        au_presupuesto_id,
+                        au_detalle_presupuesto_id,
+                        tipo,
+                        presupuesto_monto,
+                        reembolso,
+                        remanente,
+                        exento,
+                        afecto,
+                        au_usuario_id
+                  from au_liquidacion_detalle
+                  where au_liquidacion_id=@au_liquidacion_id`,
+    getFactura: `select 
+                        gasto_value, 
+                        gasto_label, 
+                        sub_gasto_value, 
+                        sub_gasto_label, 
+                        proveedor_value, 
+                        proveedor_label, 
+                        convert(varchar, [date], 105) date,
+                        total, 
+                        moneda, 
+                        serie, 
+                        numero, 
+                        uuid, 
+                        forma_pago, 
+                        metodo_pago, 
+                        cfdi, 
+                        km_inicial, 
+                        km_final, 
+                        cantidad, 
+                        factura, 
+                        [xml], 
+                        au_liquidacion_id,
+                        comentarios,
+                        id,
+                        periodicidad,
+                        [del] del,
+                        [al] al,
+                        au_presupuesto_id,
+                        au_detalle_presupuesto_id,
+                        tipo,
+                        presupuesto_monto,
+                        reembolso,
+                        remanente,
+                        exento,
+                        afecto,
+                        au_usuario_id
+                  from au_liquidacion_detalle
+                  where id=@id`,
     deleteLiquidacionById: 'delete from au_liquidacion where id = @id;',
+    liquidacionAprobacionSupervisor: 'update au_liquidacion set au_estado_liquidacion_id = 1 where id = @id;',
+    getGastosByUserLiquidacion: `select 
+                                    ag.id value,
+                                    ag.descripcion label,
+                                    ag.control_combustible ,
+                                    ag.control_kilometraje ,
+                                    ag.depreciacion ,
+                                    ag.ignorar_xml,
+                                    adp.frecuencia_codigo,
+                                    adp.au_presupuesto_id,
+                                    adp.id linea,
+                                    adp.tipo_asignacion tipo,
+                                    adp.asignacion_cantidad presupuesto_monto
+                                from
+                                    au_gasto ag
+                                join au_detalle_presupuesto adp 
+                                on
+                                    ag.id = adp.categoria_gasto_codigo
+                                WHERE 
+                                    adp.au_presupuesto_id  = @presupuesto`,
+    enviarAprobacionSupervisor: `update au_liquidacion
+                        set au_estado_liquidacion_id=1
+                        where id=@id;`,
+    enviarAprobacionContador: `update au_liquidacion
+                        set au_estado_liquidacion_id=3,
+                            rechazo_supervisor=''
+                        where id=@id;`,
+    rechazoSupervisor: `update au_liquidacion
+                        set au_estado_liquidacion_id=2,
+                            rechazo_supervisor=@razon
+                        where id=@id;`,
+    rechazoContabilidad: `update au_liquidacion
+                        set au_estado_liquidacion_id=4,
+                            rechazo_contabilidad=@razon
+                        where id=@id;`,
+    subirSAP: `update au_liquidacion
+                        set au_estado_liquidacion_id=5,
+                            rechazo_supervisor='',
+                            rechazo_contabilidad=''
+                        where id=@id;`,
+    obtener_detalle: `select
+                            *
+                        from 
+                            au_liquidacion_detalle
+                        where
+                            del = @del
+                        and 
+                            al = @al
+                        and
+                            au_presupuesto_id = @au_presupuesto_id
+                        and
+                            au_detalle_presupuesto_id = @au_detalle_presupuesto_id
+                        and
+                            gasto_value = @gasto_value
+                        and
+                            sub_gasto_value = @sub_gasto_value
+                        and
+                            au_usuario_id = @au_usuario_id`,
+    updateLiquidacionById: `update au_liquidacion_detalle set 
+                                reembolso=@reembolso,
+                                remanente=@remanente
+                            where 
+                                id = @id`,
+    getEmpresaConnectionInfo: `select
+                                    servidor_sql,
+                                    base_sql,
+                                    sap_db_type,
+                                    usuario_sql,
+                                    contrasena_sql,
+                                    usuario_sap,
+                                    contrasena_sap,
+                                    servidor_licencias
+                                from
+                                    au_liquidacion al
+                                inner join au_presupuesto ap  
+                                on
+                                    al.au_gasto_id = ap.id
+                                inner join au_empresa ae 
+                                on
+                                    ap.empresa_codigo = ae.id
+                                where
+                                    al.id = @id`,
+    getFacturasUploadSAP: `select
+                                IdLiquidacion = al.id,
+                                IDLiquidacionDetalle = ald.id,
+                                DocType = 'dDocument_Service',
+                                DocDate =
+                                case
+                                    when ae.ajuste_fin_mes = 1
+                                    and day(ald.[date]) >= COALESCE(ae.dia_efectivo_ajuste ,
+                                    0) then 
+                                                                                        cast(cast(year(dateadd(month, 1, ald.[date])) as varchar) 
+                                                                                        + '-' 
+                                                                                        + cast(month(dateadd(month, 1, ald.[date])) as varchar) 
+                                                                                        + '-01' as DATE)
+                                    else
+                                                                                        ald.[date]
+                                end,
+                                DocDueDate = ald.[date] ,
+                                DocTaxDate = ald.[date] ,
+                                CardCode = aue.codigo_proveedor_sap ,
+                                NumAtCard = COALESCE(ald.serie ,
+                                '') + ' - ' + ald.numero ,
+                                DocCurrency = RTRIM(ap.moneda_codigo),
+                                SalesPersonCode = aue.codigo_usuario_sap,
+                                U_FacFecha = ald.[date] ,
+                                U_FacSerie = coalesce(ald.serie ,
+                                '') ,
+                                U_FacNum = ald.numero ,
+                                U_facNit = ap3.nit ,
+                                U_facNom = ap2.nombre,
+                                U_Clase_LibroCV = ltrim(rtrim(agg.sap)),
+                                U_TIPO_DOCUMENTO = 'FC',
+                                businessObject = 'oPurchaseInvoices',
+                                Comentario = Coalesce(al.comentario ,
+                                ''),
+                                ItemDescription = ag.descripcion + ' - ' + ald.serie + ' - ' + ald.numero,
+                                ald.total,
+                                PriceAfVAT = ald.total,
+                                exento =
+                                case
+                                    when ald.cantidad >0 then  
+                                                                    (CAST(ald.total as Float) / ald.cantidad)* ald.exento
+                                    else
+                                                                ald.exento
+                                end,
+                                remanennte =
+                                case
+                                    when ald.cantidad >0 then 
+                                                                    (CAST(ald.total as Float) / ald.cantidad)* ald.remanente
+                                    else
+                                                                ald.remanente
+                                end,
+                                ag.exento_impuesto_codigo,
+                                ag.exento_codigo,
+                                ag.afecto_codigo ,
+                                ag.afecto_impuesto_codigo ,
+                                ag.remanente_codigo,
+                                ag.remanente_impuesto_codigo ,
+                                Proyecto = auep.proyecto,
+                                C1 = auep.centro_c1,
+                                C2 = auep.centro_c2,
+                                C3 = auep.centro_c3,
+                                C4 = auep.centro_c4,
+                                C5 = auep.centro_c5,
+                                ald.xml,
+                                ald.factura
+                            from
+                                au_liquidacion al
+                            inner join au_liquidacion_detalle ald 
+                                                        on
+                                ald.au_liquidacion_id = al.id
+                            inner join au_presupuesto ap  
+                                                            on
+                                al.au_gasto_id = ap.id
+                            inner join au_detalle_presupuesto adp 
+                                                            on
+                                adp.id = ald.au_detalle_presupuesto_id
+                            inner join au_gasto ag 
+                                                            on
+                                ald.gasto_value = ag.id
+                            inner join au_empresa ae 
+                                                            on
+                                ap.empresa_codigo = ae.id
+                            inner join au_usuario_empresa aue 
+                                                            on
+                                aue.au_empresa_id = ae.id
+                                and al.au_usuario_id = aue.au_usuario_id
+                            inner join au_proveedor ap2 
+                                                            on
+                                ald.proveedor_value = ap2.id
+                            inner join au_gasto_grupo agg 
+                                                            on
+                                agg.id = ag.au_gasto_grupo_id
+                            inner join au_proveedor ap3 
+                                                        on
+                                ap3.id = ald.proveedor_value
+                            inner join au_usuario_empresa_presupuesto auep
+                                                        on
+                                auep.presupuesto = ald.au_presupuesto_id
+                            WHERE
+                                al.id = @id
+                            order by
+                                IDLiquidacionDetalle`,
+    cerrarLiquidacion: `update au_liquidacion set au_estado_liquidacion_id = 3, resultados_subida_sap=@resultados,rechazo_contabilidad='' where id = @id;`,
 }

@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import {
     getProveedores,
-    getRoles
+    getRoles,
+    insertProveedor
 } from '../controllers/various.controller'
 
 const router = Router();
@@ -10,6 +11,8 @@ const router = Router();
 router.get('/roles', getRoles);
 
 router.get('/proveedores', getProveedores);
+
+router.post('/proveedor', insertProveedor);
 
 
 export default router;
