@@ -269,20 +269,36 @@ export const presupuestoQueries = {
 }
 
 export const liquidacionesQueries = {
-    getLiquidaciones: `select 
+    getLiquidaciones: `select
                             l.id value,
-                            convert(varchar, fecha_inicio,101) label,
-                            convert(varchar, fecha_fin,101) fecha_fin,
+                            convert(varchar,
+                            fecha_inicio,
+                            101) label,
+                            convert(varchar,
+                            fecha_fin,
+                            101) fecha_fin,
                             au_estado_liquidacion_id,
+                            e.nombre estado,
                             total_facturado,
                             no_aplica,
                             reembolso,
-                            au.nombre  usuario
-                        from 
+                            au.nombre usuarios,
+                            ag.id gasto_id,
+                            aue.au_empresa_id empresa_id
+                        from
                             au_liquidacion l
                         join au_usuario au 
+                        on
+                            l.au_usuario_id = au.id
+                        left join au_presupuesto ag 
                         on 
-                            l.au_usuario_id =au.id`,
+                            ag.id = l.au_gasto_id
+                        left join au_usuario_empresa aue 
+                        on
+                            l.au_usuario_id = aue.au_usuario_id
+                        join au_estado_liquidacion e
+                        on
+                            l.au_estado_liquidacion_id = e.id`,
     addLiquidacion: `insert into au_liquidacion (au_usuario_id,au_gasto_id,au_gasto_label,fecha_inicio,fecha_fin,total_facturado,no_aplica,reembolso,comentario)
                       values (@au_usuario_id,@au_gasto_id,@au_gasto_label,@fecha_inicio,@fecha_fin,@total_facturado,@no_aplica,@reembolso,@comentario);SELECT SCOPE_IDENTITY() AS id;`,
     getLiquidacionById: `select

@@ -341,6 +341,9 @@ export const subirSAP = async (req, res) => {
             .query(liquidacionesQueries.getFacturasUploadSAP);
 
         let log = '';
+        let credito = 0;
+        let header = ``;
+        let err = 0;
         for (let i = 0; i < result2.recordset.length; i++) {
             let l = result2.recordset[i];
 
@@ -365,7 +368,7 @@ export const subirSAP = async (req, res) => {
                             <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
                                 <soap12:Body>
                                     <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
-                                        <SessionID>D3A99297-2ABA-4082-9EB7-6F97574C978B</SessionID>
+                                        <SessionID>${r}</SessionID>
                                         <sXmlOrderObject>
                                             <![CDATA[<BOM>
                                 <BO>
@@ -410,7 +413,8 @@ export const subirSAP = async (req, res) => {
                 attachment = rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'];
             } else {
                 log += `<strong>Attachment Error</strong>: ${rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
-                // console.log(rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                console.log(rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                err = 1;
             }
             /******************************************************************************************************************************
              * Subimos los Attachments
@@ -418,7 +422,7 @@ export const subirSAP = async (req, res) => {
             /******************************************************************************************************************************
              * Subimos la factura
              *******************************************************************************************************************************/
-            let header = `<Documents>
+            header = `<Documents>
                             <row>
                                 <DocType>${l.DocType}</DocType>
                                 <DocDate>${l.DocDate.toISOString().split('T')[0]}</DocDate>
@@ -541,105 +545,121 @@ export const subirSAP = async (req, res) => {
             let r2 = JSON.parse(xmlParser.toJson(response2.data));
             if (typeof r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
                 log += `<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br>`;
-                // console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
+                console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
             } else {
                 log += `<strong>Factura Error</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
-                // console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                err = 1;
             }
             /******************************************************************************************************************************
-             * Subimos la factura
+             * Eliminamos el attachment
              *******************************************************************************************************************************/
             fs.unlink(path_ + l.IDLiquidacionDetalle + '-' + ts + '.xml');
             fs.unlink(path_ + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType);
-            /******************************************************************************************************************************
-             * Subimos la nota de credito
-             *******************************************************************************************************************************/
             if ((l.PriceAfVAT - l.exento) > 0) {
-                body = `<row>
-                        <ItemDescription>
-                            ${l.ItemDescription}
-                        </ItemDescription>
-                        <PriceAfterVAT>
-                            ${l.PriceAfVAT - l.exento}
-                        </PriceAfterVAT>
-                        <AccountCode>
-                            ${l.afecto_codigo}
-                        </AccountCode>
-                        <TaxCode>
-                            IVA
-                        </TaxCode>
-                        <ProjectCode>
-                            ${l.Proyecto}
-                        </ProjectCode>
-                        <CostingCode>
-                            ${l.C1}
-                        </CostingCode>
-                        <CostingCode2>
-                            ${l.C2}
-                        </CostingCode2>
-                        <CostingCode3>
-                            ${l.C3}
-                        </CostingCode3>
-                        <CostingCode4>
-                            ${l.C4}
-                        </CostingCode4>
-                        <CostingCode5>
-                            ${l.C5}
-                        </CostingCode5>
-                    </row>`;
-                envelope = `<?xml version="1.0" encoding="utf-8"?>
-                            <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-                                <soap12:Body>
-                                    <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
-                                        <SessionID>${r}</SessionID>
-                                        <sXmlOrderObject>
-                                            <![CDATA[<BOM xmlns='http://www.sap.com/SBO/DIS'>
-                                                <BO>
-                                                    <AdmInfo>
-                                                        <Object>oPurchaseCreditNotes</Object>
-                                                    </AdmInfo>
-                                                    ${header}
-                                                    <Document_Lines>
-                                                        ${body}
-                                                    </Document_Lines>
-                                                </BO>
-                                            </BOM>]]>
-                                        </sXmlOrderObject>
-                                    </AddPurchaseOrder>
-                                </soap12:Body>
-                            </soap12:Envelope>`;
-                // console.log(envelope);
-                config = {
-                    method: 'post',
-                    url: `http://${e.servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
-                    headers: {
-                        'Content-Type': 'application/soap+xml'
-                    },
-                    data: envelope
-                };
-                let response3 = await axios(config);
-
-                let r3 = JSON.parse(xmlParser.toJson(response3.data));
-                if (typeof r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
-                    log += `<strong>Nota de Crédito</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br><br>`;
-                    // console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
-                } else {
-                    log += `<strong>Nota de Crédito Error</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br><br>`;
-                    // console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
-                }
+                credito += l.PriceAfVAT - l.exento;
             }
-            /******************************************************************************************************************************
-             * Subimos la nota de crédito
-             *******************************************************************************************************************************/
-            //  cerrarLiquidacion
+        }
+        /******************************************************************************************************************************
+         * Subimos la nota de credito
+         *******************************************************************************************************************************/
+        let l = result2.recordset[result2.recordset.length - 1];
+        if (credito > 0) {
+            let body = `<row>
+                    <ItemDescription>
+                        ${l.ItemDescription}
+                    </ItemDescription>
+                    <PriceAfterVAT>
+                        ${credito}
+                    </PriceAfterVAT>
+                    <AccountCode>
+                        ${l.afecto_codigo}
+                    </AccountCode>
+                    <TaxCode>
+                        IVA
+                    </TaxCode>
+                    <ProjectCode>
+                        ${l.Proyecto}
+                    </ProjectCode>
+                    <CostingCode>
+                        ${l.C1}
+                    </CostingCode>
+                    <CostingCode2>
+                        ${l.C2}
+                    </CostingCode2>
+                    <CostingCode3>
+                        ${l.C3}
+                    </CostingCode3>
+                    <CostingCode4>
+                        ${l.C4}
+                    </CostingCode4>
+                    <CostingCode5>
+                        ${l.C5}
+                    </CostingCode5>
+                </row>`;
+            let envelope = `<?xml version="1.0" encoding="utf-8"?>
+                        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+                            <soap12:Body>
+                                <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+                                    <SessionID>${r}</SessionID>
+                                    <sXmlOrderObject>
+                                        <![CDATA[<BOM xmlns='http://www.sap.com/SBO/DIS'>
+                                            <BO>
+                                                <AdmInfo>
+                                                    <Object>oPurchaseCreditNotes</Object>
+                                                </AdmInfo>
+                                                ${header}
+                                                <Document_Lines>
+                                                    ${body}
+                                                </Document_Lines>
+                                            </BO>
+                                        </BOM>]]>
+                                    </sXmlOrderObject>
+                                </AddPurchaseOrder>
+                            </soap12:Body>
+                        </soap12:Envelope>`;
+            // console.log(envelope);
+            config = {
+                method: 'post',
+                url: `http://${e.servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
+                headers: {
+                    'Content-Type': 'application/soap+xml'
+                },
+                data: envelope
+            };
+            let response3 = await axios(config);
+
+            let r3 = JSON.parse(xmlParser.toJson(response3.data));
+            if (typeof r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
+                log += `<strong>Nota de Crédito</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br><br>`;
+                console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
+            } else {
+                log += `<strong>Nota de Crédito Error</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br><br>`;
+                console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                err = 1;
+            }
+        }
+        /******************************************************************************************************************************
+         * Subimos la nota de crédito
+         *******************************************************************************************************************************/
+        //  cerrarLiquidacion
+        if (err === 0) {
+            await pool
+                .request()
+                .input('id', sql.Int, id)
+                .input('resultados', sql.Text, '')
+                .query(liquidacionesQueries.cerrarLiquidacion);
+            res.json(true);
+        } else {
             await pool
                 .request()
                 .input('id', sql.Int, id)
                 .input('resultados', sql.Text, log)
                 .query(liquidacionesQueries.cerrarLiquidacion);
+            res.json(false);
         }
-        res.json(true);
     } catch (err) {
+        console.log(err);
         res.status(500);
         res.send(err.message);
     }
