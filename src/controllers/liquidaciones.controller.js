@@ -1,4 +1,9 @@
-import { getConnection, liquidacionesQueries } from '../database';
+import {
+    getConnection,
+    getConnection2,
+    liquidacionesQueries,
+    queriesSAP
+} from '../database';
 import { promises as fs } from 'fs'
 import sql from 'mssql';
 export const getLiquidaciones = async (req, res) => {
@@ -352,36 +357,39 @@ export const subirSAP = async (req, res) => {
              *******************************************************************************************************************************/
             // Timestamp to avoid name duplicates
             let ts = Date.now();
-            let path_ = __dirname + '/../uploads/';
-            await fs.writeFile(path_ + l.IDLiquidacionDetalle + '-' + ts + '.xml', l.xml, { encoding: 'utf8' });
+            let path_upload_ = "\\\\SAPSERVER02\\AttachmentsSAP";
+            let path_ = 'C:\\AttachmentsSAP';
+            let xmlRow = '';
+            if (l.xml !== '') {
+                await fs.writeFile(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.xml', l.xml, { encoding: 'utf8' });
+                xmlRow = `<row>
+                            <SourcePath>${path_}</SourcePath>
+                            <FileName>${l.IDLiquidacionDetalle}-${ts}</FileName>
+                            <FileExtension>xml</FileExtension>
+                        </row>`;
+            }
 
             let mimeType = l.factura.match(/[^:/]\w+(?=;|,)/)[0];
 
             let factura = l.factura.split("base64,")[1];
-            await fs.writeFile(path_ + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType, factura, { encoding: 'base64' });
+            await fs.writeFile(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType, factura, { encoding: 'base64' });
 
 
             // let exist = await fs.stat(path + l.IDLiquidacionDetalle + '2.xml');
             // console.log(exist);
-
             let upload = `<?xml version="1.0" encoding="utf-8"?>
                             <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
                                 <soap12:Body>
                                     <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
                                         <SessionID>${r}</SessionID>
                                         <sXmlOrderObject>
-                                            <![CDATA[<BOM>
+                                <![CDATA[<BOM>
                                 <BO>
                                     <AdmInfo>
                                         <Object>oAttachments2</Object>
                                     </AdmInfo>
                                     <Attachments2 />
-                                    <Attachments2_Lines>
-                                        <row>
-                                            <SourcePath>${path_}</SourcePath>
-                                            <FileName>${l.IDLiquidacionDetalle}-${ts}</FileName>
-                                            <FileExtension>xml</FileExtension>
-                                        </row>
+                                    <Attachments2_Lines>${xmlRow}
                                         <row>
                                             <SourcePath>${path_}</SourcePath>
                                             <FileName>${l.IDLiquidacionDetalle}-${ts}</FileName>
@@ -404,7 +412,6 @@ export const subirSAP = async (req, res) => {
             };
 
             let responseA = await axios(config);
-
             let rA = JSON.parse(xmlParser.toJson(responseA.data));
             let attachment = 0;
             if (typeof rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
@@ -545,6 +552,14 @@ export const subirSAP = async (req, res) => {
             let r2 = JSON.parse(xmlParser.toJson(response2.data));
             if (typeof r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
                 log += `<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br>`;
+
+                const poolS = await getConnection2(e.empresa_codigo);
+                const result2 = await poolS
+                    .request()
+                    .input('id', sql.Int, r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'])
+                    .query(queriesSAP.getDocNumInv);
+                console.log(result2);
+
                 console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
             } else {
                 log += `<strong>Factura Error</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
@@ -554,8 +569,10 @@ export const subirSAP = async (req, res) => {
             /******************************************************************************************************************************
              * Eliminamos el attachment
              *******************************************************************************************************************************/
-            fs.unlink(path_ + l.IDLiquidacionDetalle + '-' + ts + '.xml');
-            fs.unlink(path_ + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType);
+            if (l.xml !== '') {
+                fs.unlink(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.xml');
+            }
+            fs.unlink(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType);
             if ((l.PriceAfVAT - l.exento) > 0) {
                 credito += l.PriceAfVAT - l.exento;
             }
@@ -631,8 +648,14 @@ export const subirSAP = async (req, res) => {
 
             let r3 = JSON.parse(xmlParser.toJson(response3.data));
             if (typeof r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
-                log += `<strong>Nota de Crédito</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br><br>`;
-                console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
+                // console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
+
+                const poolS = await getConnection2(e.empresa_codigo);
+                const result2 = await poolS
+                    .request()
+                    .input('id', sql.Int, r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'])
+                    .query(queriesSAP.getDocNum);
+                log += `<strong>Nota de Crédito: </strong>: ${result2.recordset[0].DocNum}<br><br>`;
             } else {
                 log += `<strong>Nota de Crédito Error</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br><br>`;
                 console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
@@ -647,7 +670,7 @@ export const subirSAP = async (req, res) => {
             await pool
                 .request()
                 .input('id', sql.Int, id)
-                .input('resultados', sql.Text, '')
+                .input('resultados', sql.Text, log)
                 .query(liquidacionesQueries.cerrarLiquidacion);
             res.json(true);
         } else {

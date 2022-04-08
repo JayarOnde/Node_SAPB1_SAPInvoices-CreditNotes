@@ -116,7 +116,7 @@ export const bancosQueries = {
 }
 
 export const queriesSAP = {
-    getProveedoresSAP: 'select CardCode value,CardName label from OCRD',
+    getProveedoresSAP: "select CardCode value,label = CardCode + '-' + CardName from OCRD where CardType='S'",
     getUsuariosSAP: 'select SlpCode value,SlpName label from OSLP',
     getCuentasContables: `SELECT
                             value		=	AcctCode
@@ -151,6 +151,12 @@ export const queriesSAP = {
                                 PrjName label
                             from
                                 OPRJ`,
+    getDocNum: `select DocNum
+                from ORPC
+                where DocEntry = @id`,
+    getDocNumCompras: `select DocNum
+                from OPCH
+                where DocEntry = @id`,
 }
 export const queriesGastos = {
     getAllGastos: `select 
@@ -282,7 +288,7 @@ export const liquidacionesQueries = {
                             total_facturado,
                             no_aplica,
                             reembolso,
-                            au.nombre usuarios,
+                            au.nombre usuario,
                             ag.id gasto_id,
                             aue.au_empresa_id empresa_id
                         from
@@ -477,7 +483,8 @@ export const liquidacionesQueries = {
                                     contrasena_sql,
                                     usuario_sap,
                                     contrasena_sap,
-                                    servidor_licencias
+                                    servidor_licencias,
+                                    ap.empresa_codigo
                                 from
                                     au_liquidacion al
                                 inner join au_presupuesto ap  
