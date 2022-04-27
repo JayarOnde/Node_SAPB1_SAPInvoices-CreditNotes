@@ -293,7 +293,7 @@ export const liquidacionesQueries = {
                             reembolso,
                             au.nombre usuario,
                             ag.id gasto_id,
-                            aue.au_empresa_id empresa_id
+                            max(aue.au_empresa_id) empresa_id
                         from
                             au_liquidacion l
                         join au_usuario au 
@@ -307,7 +307,18 @@ export const liquidacionesQueries = {
                             l.au_usuario_id = aue.au_usuario_id
                         join au_estado_liquidacion e
                         on
-                            l.au_estado_liquidacion_id = e.id`,
+                            l.au_estado_liquidacion_id = e.id
+                            group by
+                            l.id,
+                            fecha_inicio,
+                            fecha_fin,
+                            au_estado_liquidacion_id,
+                            e.nombre,
+                            total_facturado,
+                            no_aplica,
+                            reembolso,
+                            au.nombre,
+                            ag.id`,
     addLiquidacion: `insert into au_liquidacion (au_usuario_id,au_gasto_id,au_gasto_label,fecha_inicio,fecha_fin,total_facturado,no_aplica,reembolso,comentario)
                       values (@au_usuario_id,@au_gasto_id,@au_gasto_label,@fecha_inicio,@fecha_fin,@total_facturado,@no_aplica,@reembolso,@comentario);SELECT SCOPE_IDENTITY() AS id;`,
     getLiquidacionById: `select
