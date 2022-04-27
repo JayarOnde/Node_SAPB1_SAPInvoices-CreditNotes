@@ -12,7 +12,8 @@ import {
     rechazoContabilidad,
     subirSAP,
     calculoFactura,
-    deleteFacturaByID
+    deleteFacturaByID,
+    rechazoFacturaByID
 } from '../controllers/liquidaciones.controller'
 
 const router = Router();
@@ -43,6 +44,8 @@ router.get('/liquidacion-gastos/:user/:presupuesto', getGastosByUserLiquidacion)
 router.post('/calculo-factura/:liquidacion_id/:id', calculoFactura);
 
 router.post('/liquidacion-delete-factura/:id', deleteFacturaByID);
+
+router.post('/rechazo-factura/:id', rechazoFacturaByID);
 
 
 export default router;

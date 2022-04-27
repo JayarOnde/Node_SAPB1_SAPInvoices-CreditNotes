@@ -30,9 +30,9 @@ export const addLiquidacion = async (req, res) => {
             .input('au_gasto_label', sql.VarChar, au_gasto_label)
             .input('fecha_inicio', sql.Date, fecha_inicio)
             .input('fecha_fin', sql.Date, fecha_fin)
-            .input('total_facturado', sql.Numeric, total_facturado)
-            .input('no_aplica', sql.Numeric, no_aplica)
-            .input('reembolso', sql.Numeric, reembolso)
+            .input('total_facturado', sql.Numeric(38, 2), total_facturado)
+            .input('no_aplica', sql.Numeric(38, 2), no_aplica)
+            .input('reembolso', sql.Numeric(38, 2), reembolso)
             .input('comentario', sql.VarChar, comentario)
             .query(liquidacionesQueries.addLiquidacion);
         res.json(result.recordset[0].id);
@@ -89,11 +89,24 @@ export const getLiquidacionById = async (req, res) => {
                 result2.recordset[i].id,
                 result2.recordset[i].reembolso,
                 result2.recordset[i].remanente,
+                result2.recordset[i].reembolso_monto,
+                result2.recordset[i].remanente_monto,
+                result2.recordset[i].razon_rechazo,
             ];
             facturas.push(row);
         }
 
         ret.facturas = facturas;
+
+        // Get presupesto vs real
+        const result3 = await poolE
+            .request()
+            .input('presupuesto', sql.BigInt, ret.au_gasto_id)
+            .input('del', sql.Date, ret.fecha_inicio)
+            .input('al', sql.Date, ret.fecha_fin)
+            .query(liquidacionesQueries.cuadrarPresupuesto);
+
+        ret.cuadrar = result3.recordset;
         res.json(ret);
 
 
@@ -126,49 +139,13 @@ export const updateLiquidacionById = async (req, res) => {
             .input('au_gasto_label', sql.VarChar, au_gasto_label)
             .input('fecha_inicio', sql.Date, fecha_inicio)
             .input('fecha_fin', sql.Date, fecha_fin)
-            .input('total_facturado', sql.Numeric, total_facturado)
-            .input('no_aplica', sql.Numeric, no_aplica)
-            .input('reembolso', sql.Numeric, reembolso)
+            .input('total_facturado', sql.Numeric(38, 2), total_facturado)
+            .input('no_aplica', sql.Numeric(38, 2), no_aplica)
+            .input('reembolso', sql.Numeric(38, 2), reembolso)
             .input('comentario', sql.VarChar, comentario)
             .input('id', id)
             .query(liquidacionesQueries.updateLiquidacionByIdPrincipal);
 
-        // await pool
-        //     .request()
-        //     .input('au_liquidacion_id', sql.Int, id)
-        //     .query(liquidacionesQueries.deleteFacturas);
-
-        // if (facturas.length > 0) {
-        //     for (let i = 0; i < facturas.length; i++) {
-        //         let fecha = facturas[i][6].split("/");
-        //         fecha = fecha[2] + '=' + fecha[1] + '-' + fecha[0];
-        //         await pool
-        //             .request()
-        //             .input('gasto_value', sql.BigInt, facturas[i][0])
-        //             .input('gasto_label', sql.VarChar, facturas[i][1])
-        //             .input('sub_gasto_value', sql.BigInt, facturas[i][2])
-        //             .input('sub_gasto_label', sql.VarChar, facturas[i][3])
-        //             .input('proveedor_value', sql.BigInt, facturas[i][4])
-        //             .input('proveedor_label', sql.VarChar, facturas[i][5])
-        //             .input('date', sql.Date, fecha)
-        //             .input('total', sql.Numeric, facturas[i][7])
-        //             .input('moneda', sql.VarChar, facturas[i][8])
-        //             .input('serie', sql.VarChar, facturas[i][9])
-        //             .input('numero', sql.VarChar, facturas[i][10])
-        //             .input('uuid', sql.VarChar, facturas[i][11])
-        //             .input('forma_pago', sql.VarChar, facturas[i][12])
-        //             .input('metodo_pago', sql.VarChar, facturas[i][13])
-        //             .input('cfdi', sql.VarChar, facturas[i][14])
-        //             .input('km_inicial', sql.VarChar, facturas[i][15])
-        //             .input('km_final', sql.VarChar, facturas[i][16])
-        //             .input('cantidad', sql.VarChar, facturas[i][17])
-        //             .input('factura', sql.VarChar, facturas[i][18])
-        //             .input('xml', sql.VarChar, facturas[i][19])
-        //             .input('comentarios', sql.Text, facturas[i][20])
-        //             .input('au_liquidacion_id', sql.BigInt, id)
-        //             .query(liquidacionesQueries.addFactura);
-        //     }
-        // }
     } catch (err) {
         res.status(500);
         res.send(err.message);
@@ -359,6 +336,8 @@ export const subirSAP = async (req, res) => {
             let ts = Date.now();
             let path_upload_ = "\\\\SAPSERVER02\\AttachmentsSAP";
             let path_ = 'C:\\AttachmentsSAP';
+            // let path_upload_ = "c:\\";
+            // let path_ = 'C:\\';
             let xmlRow = '';
             if (l.xml !== '') {
                 await fs.writeFile(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.xml', l.xml, { encoding: 'utf8' });
@@ -415,12 +394,12 @@ export const subirSAP = async (req, res) => {
             let rA = JSON.parse(xmlParser.toJson(responseA.data));
             let attachment = 0;
             if (typeof rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
-                log += `<strong>Attachment</strong>: ${rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br>`;
-                console.log(rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
+                // log += `<strong>Attachment</strong>: ${rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br>`;
+                // console.log(rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
                 attachment = rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'];
             } else {
-                log += `<strong>Attachment Error</strong>: ${rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
-                console.log(rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                // log += `<strong>Attachment Error</strong>: ${rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
+                // console.log(rA["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
                 err = 1;
             }
             /******************************************************************************************************************************
@@ -429,19 +408,21 @@ export const subirSAP = async (req, res) => {
             /******************************************************************************************************************************
              * Subimos la factura
              *******************************************************************************************************************************/
+            console.log(l.DocDate);
             header = `<Documents>
                             <row>
                                 <DocType>${l.DocType}</DocType>
-                                <DocDate>${l.DocDate.toISOString().split('T')[0]}</DocDate>
-                                <DocDueDate>${l.DocDueDate.toISOString().split('T')[0]}</DocDueDate>
-                                <TaxDate>${l.DocTaxDate.toISOString().split('T')[0]}</TaxDate>
+                                <DocDate>${l.DocDate}</DocDate>
+                                <DocDueDate>${l.DocDueDate}</DocDueDate>
+                                <TaxDate>${l.DocTaxDate}</TaxDate>
                                 <CardCode>${l.CardCode}</CardCode>
                                 <NumAtCard>${l.NumAtCard}</NumAtCard>
                                 <DocCurrency>${l.DocCurrency}</DocCurrency>
                                 <SalesPersonCode>${l.SalesPersonCode}</SalesPersonCode>
-                                <U_FacFecha>${l.U_FacFecha.toISOString().split('T')[0]}</U_FacFecha>
+                                <U_FacFecha>${l.U_FacFecha}</U_FacFecha>
                                 <U_FacSerie>${l.U_FacSerie}</U_FacSerie>
-                                <U_FacNum>${l.U_FacNum}</U_FacNum>
+                                <U_FacNo>${l.U_FacNum}</U_FacNo>
+                                <U_FacNum>10</U_FacNum>
                                 <U_FacNit>${l.U_facNit.trim()}</U_FacNit>
                                 <U_FacNom>${l.U_facNom}</U_FacNom>
                                 <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
@@ -455,13 +436,13 @@ export const subirSAP = async (req, res) => {
                                 ${l.ItemDescription}
                             </ItemDescription>
                             <PriceAfterVAT>
-                                ${l.PriceAfVAT - l.exento}
+                                ${l.afecto}
                             </PriceAfterVAT>
                             <AccountCode>
                                 ${l.afecto_codigo}
                             </AccountCode>
                             <TaxCode>
-                                IVA
+                                ${l.afecto_impuesto_nombre.split('-')[0].trim()}
                             </TaxCode>
                             <ProjectCode>
                                 ${l.Proyecto}
@@ -488,13 +469,13 @@ export const subirSAP = async (req, res) => {
                                 ${l.ItemDescription}
                             </ItemDescription>
                             <PriceAfterVAT>
-                                ${l.exento}
+                                ${l.total - l.afecto}
                             </PriceAfterVAT>
                             <AccountCode>
-                                ${l.afecto_codigo}
+                                ${l.exento_codigo}
                             </AccountCode>
                             <TaxCode>
-                                EXE
+                                ${l.exento_impuesto_nombre.split('-')[0].trim()}
                             </TaxCode>
                             <ProjectCode>
                                 ${l.Proyecto}
@@ -538,7 +519,6 @@ export const subirSAP = async (req, res) => {
                                     </AddPurchaseOrder>
                                 </soap12:Body>
                             </soap12:Envelope>`;
-            // console.log(envelope);
             config = {
                 method: 'post',
                 url: `http://${e.servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
@@ -551,16 +531,17 @@ export const subirSAP = async (req, res) => {
 
             let r2 = JSON.parse(xmlParser.toJson(response2.data));
             if (typeof r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse'] !== "undefined") {
-                log += `<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']}<br>`;
 
                 const poolS = await getConnection2(e.empresa_codigo);
                 const result2 = await poolS
                     .request()
                     .input('id', sql.Int, r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'])
                     .query(queriesSAP.getDocNumInv);
-                console.log(result2);
 
-                console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']);
+                log += `<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']} DocNum: ${result2.recordset[0].DocNum}<br>`;
+                console.log(`<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']} DocNum: ${result2.recordset[0].DocNum}<br>`);
+
+                updateFacturaSAP(l.IDLiquidacionDetalle, r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'], result2.recordset[0].DocNum);
             } else {
                 log += `<strong>Factura Error</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
                 console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
@@ -574,7 +555,7 @@ export const subirSAP = async (req, res) => {
             }
             fs.unlink(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType);
             if ((l.PriceAfVAT - l.exento) > 0) {
-                credito += l.PriceAfVAT - l.exento;
+                credito += l.remanente_monto;
             }
         }
         /******************************************************************************************************************************
@@ -593,7 +574,7 @@ export const subirSAP = async (req, res) => {
                         ${l.afecto_codigo}
                     </AccountCode>
                     <TaxCode>
-                        IVA
+                        ${l.remanente_impuesto_nombre.split('-')[0].trim()}
                     </TaxCode>
                     <ProjectCode>
                         ${l.Proyecto}
@@ -655,7 +636,9 @@ export const subirSAP = async (req, res) => {
                     .request()
                     .input('id', sql.Int, r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'])
                     .query(queriesSAP.getDocNum);
-                log += `<strong>Nota de Crédito: </strong>: ${result2.recordset[0].DocNum}<br><br>`;
+                log += `<strong>Nota de Crédito</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']} DocNum: ${result2.recordset[0].DocNum}<br><br>`;
+
+                updateLiquidacionSAP(l.IdLiquidacion, r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'], result2.recordset[0].DocNum);
             } else {
                 log += `<strong>Nota de Crédito Error</strong>: ${r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br><br>`;
                 console.log(r3["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
@@ -740,11 +723,8 @@ export const calculoFactura = async (req, res) => {
             }
         }
 
-        console.log(suma_cantidad);
-
         // Obtenemos el sobrante de la factura que estamos ingresando
         let sobrante = cantidad_presupuestada - suma_cantidad;
-        console.log(cantidad_presupuestada, suma_cantidad, sobrante);
         // sobrante = sobrante < 0 ? 0 : sobrante;
         if (sobrante >= total) {
             reembolso = total;
@@ -760,9 +740,16 @@ export const calculoFactura = async (req, res) => {
         }
 
 
+        let reembolso_monto = reembolso;
+        let remanente_monto = remanente;
+
+        // v[17] = Cantidad
+        if (parseFloat(v[17]) > 0) {
+            reembolso_monto = (v[7] / parseFloat(v[17])) * parseFloat(reembolso);
+            remanente_monto = (v[7] / parseFloat(v[17])) * parseFloat(remanente);
+        }
+
         // Insertamos la factura
-        // let fecha = v[6].split("/");
-        // fecha = fecha[2] + '-' + fecha[1] + '-' + fecha[0];
         await pool
             .request()
             .input('gasto_value', sql.BigInt, v[0])
@@ -772,7 +759,7 @@ export const calculoFactura = async (req, res) => {
             .input('proveedor_value', sql.BigInt, v[4])
             .input('proveedor_label', sql.VarChar, v[5])
             .input('date', sql.Date, v[6])
-            .input('total', sql.Numeric, v[7])
+            .input('total', sql.Numeric(38, 2), v[7])
             .input('moneda', sql.VarChar, v[8])
             .input('serie', sql.VarChar, v[9])
             .input('numero', sql.VarChar, v[10])
@@ -793,11 +780,14 @@ export const calculoFactura = async (req, res) => {
             .input('au_presupuesto_id', sql.BigInt, v[24])
             .input('au_detalle_presupuesto_id', sql.BigInt, v[25])
             .input('tipo', sql.VarChar, v[26])
-            .input('presupuesto_monto', sql.Numeric, v[27])
-            .input('reembolso', sql.Numeric, reembolso)
-            .input('remanente', sql.Numeric, remanente)
-            .input('exento', sql.Numeric, v[29])
-            .input('afecto', sql.Numeric, v[30])
+            .input('presupuesto_monto', sql.Numeric(38, 2), v[27])
+            .input('reembolso', sql.Numeric(38, 2), reembolso)
+            .input('remanente', sql.Numeric(38, 2), remanente)
+            .input('exento', sql.Numeric(38, 2), v[29])
+            .input('afecto', sql.Numeric(38, 2), v[30])
+            .input('reembolso_monto', sql.Numeric(38, 2), reembolso_monto)
+            .input('remanente_monto', sql.Numeric(38, 2), remanente_monto)
+            .input('razon_rechazo', sql.Text, v[32])
             .input('au_usuario_id', sql.BigInt, v[31])
             .query(liquidacionesQueries.addFactura);
 
@@ -827,7 +817,6 @@ const deleteFactura = async (
         .input('id', sql.Int, id)
         .query(liquidacionesQueries.deleteFacturaById);
 
-    console.log(del, al);
     const result = await pool
         .request()
         .input('del', sql.Date, new Date(del))
@@ -862,8 +851,8 @@ const deleteFactura = async (
         // Update factura valores
         await pool
             .request()
-            .input('reembolso', sql.BigInt, reembolso)
-            .input('remanente', sql.BigInt, remanente)
+            .input('reembolso', sql.Numeric(38, 2), reembolso)
+            .input('remanente', sql.Numeric(38, 2), remanente)
             .input('id', id)
             .query(liquidacionesQueries.updateFacturasById);
     }
@@ -911,3 +900,61 @@ export const deleteFacturaByID = async (req, res) => {
     }
 };
 
+export const updateLiquidacionSAP = async (id, DocEntry, DocNum) => {
+
+    try {
+        const pool = await getConnection();
+        await pool
+            .request()
+            .input('DocEntry', sql.BigInt, DocEntry)
+            .input('DocNum', sql.BigInt, DocNum)
+            .input('id', id)
+            .query(liquidacionesQueries.updateLiquidacionSAP);
+
+    } catch (err) {
+        // res.status(500);
+        console.log(err.message);
+    }
+
+    // res.json({ msg: "Liquidación actualizada con éxito!" });
+};
+
+export const updateFacturaSAP = async (id, DocEntry, DocNum) => {
+    try {
+        const pool = await getConnection();
+        await pool
+            .request()
+            .input('DocEntry', sql.BigInt, DocEntry)
+            .input('DocNum', sql.BigInt, DocNum)
+            .input('id', id)
+            .query(liquidacionesQueries.updateFacturaSAP);
+
+    } catch (err) {
+        console.log(err.message);
+    }
+
+    // res.json({ msg: "Liquidación actualizada con éxito!" });
+};
+
+export const rechazoFacturaByID = async (req, res) => {
+
+    const { id } = req.params;
+    const {
+        razon
+    } = req.body;
+
+    try {
+        const pool = await getConnection();
+        await pool
+            .request()
+            .input('razon_rechazo', sql.Text, razon)
+            .input('id', id)
+            .query(liquidacionesQueries.rechazoFacturaByID);
+
+    } catch (err) {
+        console.log(err.message);
+        res.json({ msg: err.message });
+    }
+
+    res.json({ msg: "¡Factura rechazada!" });
+};

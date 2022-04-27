@@ -157,6 +157,9 @@ export const queriesSAP = {
     getDocNumCompras: `select DocNum
                 from OPCH
                 where DocEntry = @id`,
+    getDocNumInv: `select DocNum
+                from OPCH
+                where DocEntry = @id`,
 }
 export const queriesGastos = {
     getAllGastos: `select 
@@ -309,7 +312,8 @@ export const liquidacionesQueries = {
                       values (@au_usuario_id,@au_gasto_id,@au_gasto_label,@fecha_inicio,@fecha_fin,@total_facturado,@no_aplica,@reembolso,@comentario);SELECT SCOPE_IDENTITY() AS id;`,
     getLiquidacionById: `select
                             l.*,
-                            u.nombre
+                            u.nombre,
+                            u.id uid
                         from
                             au_liquidacion l
                         inner join au_usuario u 
@@ -333,8 +337,8 @@ export const liquidacionesQueries = {
     deleteFacturaById: `delete from au_liquidacion_detalle
                      where id=@id`,
     addFactura: `INSERT INTO au_liquidacion_detalle
-                (gasto_value, gasto_label, sub_gasto_value, sub_gasto_label, proveedor_value, proveedor_label, [date], total, moneda, serie, numero, uuid, forma_pago, metodo_pago, cfdi, km_inicial, km_final, cantidad, factura, [xml], au_liquidacion_id,comentarios,periodicidad,del,al,au_presupuesto_id,au_detalle_presupuesto_id,tipo,presupuesto_monto,reembolso,remanente,exento,afecto,au_usuario_id)
-                VALUES(@gasto_value,@gasto_label,@sub_gasto_value,@sub_gasto_label,@proveedor_value,@proveedor_label,@date,@total,@moneda,@serie,@numero,@uuid,@forma_pago,@metodo_pago,@cfdi,@km_inicial,@km_final,@cantidad,@factura,@xml,@au_liquidacion_id,@comentarios,@periodicidad,@del,@al,@au_presupuesto_id,@au_detalle_presupuesto_id,@tipo,@presupuesto_monto,@reembolso,@remanente,@exento,@afecto,@au_usuario_id);`,
+                (gasto_value, gasto_label, sub_gasto_value, sub_gasto_label, proveedor_value, proveedor_label, [date], total, moneda, serie, numero, uuid, forma_pago, metodo_pago, cfdi, km_inicial, km_final, cantidad, factura, [xml], au_liquidacion_id,comentarios,periodicidad,del,al,au_presupuesto_id,au_detalle_presupuesto_id,tipo,presupuesto_monto,reembolso,remanente,exento,afecto,au_usuario_id,reembolso_monto,remanente_monto,razon_rechazo)
+                VALUES(@gasto_value,@gasto_label,@sub_gasto_value,@sub_gasto_label,@proveedor_value,@proveedor_label,@date,@total,@moneda,@serie,@numero,@uuid,@forma_pago,@metodo_pago,@cfdi,@km_inicial,@km_final,@cantidad,@factura,@xml,@au_liquidacion_id,@comentarios,@periodicidad,@del,@al,@au_presupuesto_id,@au_detalle_presupuesto_id,@tipo,@presupuesto_monto,@reembolso,@remanente,@exento,@afecto,@au_usuario_id,@reembolso_monto,@remanente_monto,@razon_rechazo);`,
     getFacturas: `select 
                         gasto_value, 
                         gasto_label, 
@@ -370,7 +374,10 @@ export const liquidacionesQueries = {
                         remanente,
                         exento,
                         afecto,
-                        au_usuario_id
+                        au_usuario_id,
+                        reembolso_monto,
+                        remanente_monto,
+                        razon_rechazo
                   from au_liquidacion_detalle
                   where au_liquidacion_id=@au_liquidacion_id`,
     getFactura: `select 
@@ -504,21 +511,20 @@ export const liquidacionesQueries = {
                                     when ae.ajuste_fin_mes = 1
                                     and day(ald.[date]) >= COALESCE(ae.dia_efectivo_ajuste ,
                                     0) then 
-                                                                                        cast(cast(year(dateadd(month, 1, ald.[date])) as varchar) 
-                                                                                        + '-' 
+                                                                                        cast(year(dateadd(month, 1, ald.[date])) as varchar) 
                                                                                         + cast(month(dateadd(month, 1, ald.[date])) as varchar) 
-                                                                                        + '-01' as DATE)
+                                                                                        + '01'
                                     else
-                                                                                        ald.[date]
+                                    CONVERT(VARCHAR(8), ald.[date],112)
                                 end,
-                                DocDueDate = ald.[date] ,
-                                DocTaxDate = ald.[date] ,
+                                DocDueDate = CONVERT(VARCHAR(8), ald.[date],112) ,
+                                DocTaxDate = CONVERT(VARCHAR(8), ald.[date],112) ,
                                 CardCode = aue.codigo_proveedor_sap ,
                                 NumAtCard = COALESCE(ald.serie ,
                                 '') + ' - ' + ald.numero ,
                                 DocCurrency = RTRIM(ap.moneda_codigo),
                                 SalesPersonCode = aue.codigo_usuario_sap,
-                                U_FacFecha = ald.[date] ,
+                                U_FacFecha = CONVERT(VARCHAR(8), ald.[date],112) ,
                                 U_FacSerie = coalesce(ald.serie ,
                                 '') ,
                                 U_FacNum = ald.numero ,
@@ -532,20 +538,9 @@ export const liquidacionesQueries = {
                                 ItemDescription = ag.descripcion + ' - ' + ald.serie + ' - ' + ald.numero,
                                 ald.total,
                                 PriceAfVAT = ald.total,
-                                exento =
-                                case
-                                    when ald.cantidad >0 then  
-                                                                    (CAST(ald.total as Float) / ald.cantidad)* ald.exento
-                                    else
-                                                                ald.exento
-                                end,
-                                remanennte =
-                                case
-                                    when ald.cantidad >0 then 
-                                                                    (CAST(ald.total as Float) / ald.cantidad)* ald.remanente
-                                    else
-                                                                ald.remanente
-                                end,
+                                ald.afecto,
+                                ald.exento ,
+                                ald.remanente,
                                 ag.exento_impuesto_codigo,
                                 ag.exento_codigo,
                                 ag.afecto_codigo ,
@@ -559,7 +554,11 @@ export const liquidacionesQueries = {
                                 C4 = auep.centro_c4,
                                 C5 = auep.centro_c5,
                                 ald.xml,
-                                ald.factura
+                                ald.factura,
+                                ag.exento_impuesto_nombre,
+                                ag.afecto_impuesto_nombre,
+                                ag.remanente_impuesto_nombre,
+                                ald.remanente_monto
                             from
                                 au_liquidacion al
                             inner join au_liquidacion_detalle ald 
@@ -598,4 +597,52 @@ export const liquidacionesQueries = {
                             order by
                                 IDLiquidacionDetalle`,
     cerrarLiquidacion: `update au_liquidacion set au_estado_liquidacion_id = 3, resultados_subida_sap=@resultados,rechazo_contabilidad='' where id = @id;`,
+    updateLiquidacionSAP: `update au_liquidacion
+                        set DocEntry=@DocEntry,
+                        DocNum=@DocNum
+                    where
+                        id=@id`,
+    updateFacturaSAP: `update au_liquidacion_detalle
+                        set DocEntry=@DocEntry,
+                        DocNum=@DocNum,
+                        objectType=8
+                    where
+                        id=@id`,
+    rechazoFacturaByID: `update au_liquidacion_detalle
+                        set razon_rechazo=@razon_rechazo
+                    where
+                        id=@id`,
+    cuadrarPresupuesto: `select 
+                            adp.categoria_gasto_nombre ,
+                            adp.tipo_asignacion ,
+                            adp.asignacion_cantidad ,
+                            adp.asignacion_medida,
+                            adp.frecuencia_nombre,
+                            total_real = sum(ald.total),
+                            cantidad_real = sum(ald.cantidad)
+                        FROM 
+                            au_detalle_presupuesto adp
+                        left join 
+                        (
+                        select 
+                                total,
+                                cantidad,
+                                gasto_value
+                            from au_liquidacion al 
+                            inner join au_liquidacion_detalle ald 
+                                on ald.au_liquidacion_id =al.id
+                            where al.fecha_inicio = @del
+                            and al.fecha_fin = @al
+                            and al.au_gasto_id =@presupuesto
+                        )
+                        ald 
+                            on ald.gasto_value  = adp.categoria_gasto_codigo 
+                        WHERE 
+                            adp.au_presupuesto_id = @presupuesto
+                        group by
+                            adp.categoria_gasto_nombre ,
+                            adp.tipo_asignacion ,
+                            adp.asignacion_cantidad ,
+                            adp.asignacion_medida,
+                            adp.frecuencia_nombre`,
 }
