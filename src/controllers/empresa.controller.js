@@ -105,7 +105,7 @@ export const updateEmpresaById = async (req, res) => {
             .input('moneda_extranjera', sql.VarChar, req.body.moneda_extranjera)
             .input('dias_atraso_facturacion_ruta', sql.Int, req.body.dias_atraso_facturacion_ruta)
             .input('valor_impuesto', sql.Int, req.body.valor_impuesto)
-            .input('dias_atraso_facturacion_gastos', sql.Int, req.body.dias_atraso_facturacion_gastos)
+            .input('dias_atraso_facturacion_depreciacion', sql.Int, req.body.dias_atraso_facturacion_depreciacion)
             .input('no_identificacion_fiscal', sql.VarChar, req.body.no_identificacion_fiscal)
             .input('dia_efectivo_ajuste', sql.Int, req.body.dia_efectivo_ajuste)
             .input('remanente_nota_credito', sql.TinyInt, req.body.remanente_nota_credito)

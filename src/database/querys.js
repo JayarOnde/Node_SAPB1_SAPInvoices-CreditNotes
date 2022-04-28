@@ -56,7 +56,7 @@ export const queriesEmpresas = {
                                 moneda_extranjera=@moneda_extranjera,
                                 dias_atraso_facturacion_ruta=@dias_atraso_facturacion_ruta,
                                 valor_impuesto=@valor_impuesto,
-                                dias_atraso_facturacion_gastos=@dias_atraso_facturacion_gastos,
+                                dias_atraso_facturacion_depreciacion=@dias_atraso_facturacion_depreciacion,
                                 no_identificacion_fiscal=@no_identificacion_fiscal,
                                 dia_efectivo_ajuste=@dia_efectivo_ajuste,
                                 remanente_nota_credito=@remanente_nota_credito,
@@ -219,7 +219,8 @@ export const presupuestoQueries = {
                             nombre label,
                             activo,
                             empresa_codigo empresa, 
-                            empresa_nombre 
+                            empresa_nombre,
+                            monto_maximo_factura 
                         from 
                             au_presupuesto`,
     getPresupuestoUsuario: `select 
