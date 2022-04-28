@@ -30,9 +30,9 @@ export const queries = {
 
 export const variousQueries = {
     getRoles: 'select id value,nombre label from au_rol',
-    getProveedores: `select id value,nombre + ' (' + nit + ')' label,nombre,nit from au_proveedor`,
-    insertProveedor: `insert into au_proveedor(nit,nombre,tipo_proveedor) values (@nit,@nombre,@tipo_proveedor); SELECT SCOPE_IDENTITY() AS id;`,
-    proveedorExists: `select 1 from au_proveedor where nit=@nit;`,
+    getProveedores: `select id value,nombre + ' (' + nit + ')' label,nombre,nit from au_proveedor where au_empresa_id=@au_empresa_id`,
+    insertProveedor: `insert into au_proveedor(nit,nombre,tipo_proveedor,au_empresa_id) values (@nit,@nombre,@tipo_proveedor,@au_empresa_id); SELECT SCOPE_IDENTITY() AS id;`,
+    proveedorExists: `select 1 from au_proveedor where nit=@nit and au_empresa_id=@au_empresa_id;`,
 }
 
 export const queriesEmpresas = {
@@ -220,14 +220,18 @@ export const presupuestoQueries = {
                             activo,
                             empresa_codigo empresa, 
                             empresa_nombre,
-                            monto_maximo_factura 
+                            monto_maximo_factura,
+                            tipo_gasto_nombre 
                         from 
                             au_presupuesto`,
     getPresupuestoUsuario: `select 
                                 p.id value,
                                 nombre + ' (' + empresa_nombre + ')' label,
                                 activo,
-                                empresa_codigo empresa
+                                empresa_codigo empresa, 
+                                empresa_nombre,
+                                monto_maximo_factura,
+                                tipo_gasto_nombre 
                             from 
                                 au_presupuesto p
                             join au_usuario_empresa aue 

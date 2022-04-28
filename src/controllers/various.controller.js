@@ -20,10 +20,12 @@ export const getRoles = async (req, res) => {
 };
 
 export const getProveedores = async (req, res) => {
+    const { au_empresa_id } = req.params;
     try {
         const pool = await getConnection();
         const result = await pool
             .request()
+            .input('au_empresa_id', sql.BigInt, au_empresa_id)
             .query(variousQueries.getProveedores);
         res.json(result.recordset);
     } catch (err) {
@@ -36,7 +38,8 @@ export const insertProveedor = async (req, res) => {
     const {
         nit,
         nombre,
-        tipo_proveedor
+        tipo_proveedor,
+        au_empresa_id
     } = req.body;
 
     try {
@@ -45,6 +48,7 @@ export const insertProveedor = async (req, res) => {
         const result = await pool
             .request()
             .input('nit', sql.VarChar, nit)
+            .input('au_empresa_id', sql.VarChar, au_empresa_id)
             .query(variousQueries.proveedorExists);
         if (result.recordset.length > 0) {
             res.json({ res: -1 });
@@ -54,6 +58,7 @@ export const insertProveedor = async (req, res) => {
                 .input('nit', sql.VarChar, nit)
                 .input('nombre', sql.VarChar, nombre)
                 .input('tipo_proveedor', sql.VarChar, tipo_proveedor)
+                .input('au_empresa_id', sql.BigInt, au_empresa_id)
                 .query(variousQueries.insertProveedor);
             res.json(result.recordset);
         }

@@ -10,7 +10,7 @@ const router = Router();
 // Routes
 router.get('/roles', getRoles);
 
-router.get('/proveedores', getProveedores);
+router.get('/proveedores/:au_empresa_id', getProveedores);
 
 router.post('/proveedor', insertProveedor);
 

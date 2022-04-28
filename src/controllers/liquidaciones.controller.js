@@ -845,7 +845,7 @@ const deleteFactura = async (
             remanente = 0;
         } else {
             reembolso = tot + suma_cantidad;
-            remanente = -sum_cantidad;
+            remanente = -suma_cantidad;
         }
 
         // Update factura valores
