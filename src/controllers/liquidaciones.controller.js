@@ -74,7 +74,7 @@ export const getLiquidacionById = async (req, res) => {
                 result2.recordset[i].total,
                 result2.recordset[i].moneda,
                 result2.recordset[i].serie,
-                result2.recordset[i].numero,
+                result2.recordset[i].numero,//10
                 result2.recordset[i].uuid,
                 result2.recordset[i].forma_pago,
                 result2.recordset[i].metodo_pago,
@@ -84,7 +84,7 @@ export const getLiquidacionById = async (req, res) => {
                 result2.recordset[i].cantidad,
                 result2.recordset[i].factura,
                 result2.recordset[i].xml,
-                result2.recordset[i].au_liquidacion_id,
+                result2.recordset[i].au_liquidacion_id,//20
                 result2.recordset[i].comentarios,
                 result2.recordset[i].id,
                 result2.recordset[i].reembolso,
@@ -725,6 +725,7 @@ export const calculoFactura = async (req, res) => {
 
         // Obtenemos el sobrante de la factura que estamos ingresando
         let sobrante = cantidad_presupuestada - suma_cantidad;
+        console.log(sobrante, cantidad_presupuestada, suma_cantidad);
         // sobrante = sobrante < 0 ? 0 : sobrante;
         if (sobrante >= total) {
             reembolso = total;
@@ -735,7 +736,7 @@ export const calculoFactura = async (req, res) => {
                 remanente = total;
             } else {
                 reembolso = sobrante;
-                remanente = total - sobrante;
+                remanente = parseFloat(total) - parseFloat(sobrante);
             }
         }
 
@@ -743,11 +744,13 @@ export const calculoFactura = async (req, res) => {
         let reembolso_monto = reembolso;
         let remanente_monto = remanente;
 
+        // let precio_por_unidad = parseFloat(v[7]) / parseFloat(v[17]);
         // v[17] = Cantidad
-        if (parseFloat(v[17]) > 0) {
-            reembolso_monto = (v[7] / parseFloat(v[17])) * parseFloat(reembolso);
-            remanente_monto = (v[7] / parseFloat(v[17])) * parseFloat(remanente);
-        }
+        // if (parseFloat(v[17]) > 0) {
+        //     reembolso_monto = precio_por_unidad * parseFloat(reembolso);
+        //     remanente_monto = precio_por_unidad * parseFloat(remanente);
+        // }
+
 
         // Insertamos la factura
         await pool
