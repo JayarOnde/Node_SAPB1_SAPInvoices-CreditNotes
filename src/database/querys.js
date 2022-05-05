@@ -329,7 +329,9 @@ export const liquidacionesQueries = {
     getLiquidacionById: `select
                             l.*,
                             u.nombre,
-                            u.id uid
+                            u.id uid,
+                            CONVERT(VARCHAR(26), l.fecha_inicio,23) i2,
+                            CONVERT(VARCHAR(26), l.fecha_fin,23) f2
                         from
                             au_liquidacion l
                         inner join au_usuario u 
@@ -393,7 +395,9 @@ export const liquidacionesQueries = {
                         au_usuario_id,
                         reembolso_monto,
                         remanente_monto,
-                        razon_rechazo
+                        razon_rechazo,
+                        del del2,
+                        al al2
                   from au_liquidacion_detalle
                   where au_liquidacion_id=@au_liquidacion_id`,
     getFactura: `select 
@@ -492,7 +496,9 @@ export const liquidacionesQueries = {
                         and
                             sub_gasto_value = @sub_gasto_value
                         and
-                            au_usuario_id = @au_usuario_id`,
+                            au_usuario_id = @au_usuario_id
+                    order by 
+                        id asc`,
     updateLiquidacionById: `update au_liquidacion_detalle set 
                                 reembolso=@reembolso,
                                 remanente=@remanente
@@ -661,4 +667,28 @@ export const liquidacionesQueries = {
                             adp.asignacion_cantidad ,
                             adp.asignacion_medida,
                             adp.frecuencia_nombre`,
+    getDetallePresupuesto: `select
+                        adp.categoria_gasto_nombre ,
+                        adp.tipo_asignacion ,
+                        adp.asignacion_cantidad ,
+                        adp.asignacion_medida,
+                        adp.frecuencia_nombre,
+                        adp.id
+                    FROM 
+                        au_detalle_presupuesto adp 
+                    WHERE 
+                        au_presupuesto_id = @id`,
+    getEjecutado: `select 
+                        total = sum(total),
+                        cantidad = sum(cantidad)
+                    from 
+                        au_liquidacion_detalle ald 
+                    WHERE 
+                        ald.au_detalle_presupuesto_id = @id
+                    and
+                        del = @del
+                    and
+                        al = @al
+                    and
+                        au_usuario_id=@usuario`
 }

@@ -4,6 +4,15 @@ import {
     liquidacionesQueries,
     queriesSAP
 } from '../database';
+import {
+    eachWeekOfInterval,
+    eachMonthOfInterval,
+    startOfWeek,
+    endOfWeek,
+    startOfMonth,
+    endOfMonth,
+    format
+} from 'date-fns'
 import { promises as fs } from 'fs'
 import sql from 'mssql';
 export const getLiquidaciones = async (req, res) => {
@@ -42,6 +51,15 @@ export const addLiquidacion = async (req, res) => {
     }
 };
 
+const adjustDateToLocalTimeZoneDayString = (date) => {
+    if (!date) {
+        return undefined;
+    }
+    const dateCopy = new Date(date);
+    dateCopy.setTime(dateCopy.getTime() - dateCopy.getTimezoneOffset() * 60 * 1000);
+    return dateCopy.toISOString().split('T')[0];
+};
+
 export const getLiquidacionById = async (req, res) => {
     const { id } = req.params;
     try {
@@ -60,6 +78,35 @@ export const getLiquidacionById = async (req, res) => {
             .query(liquidacionesQueries.getFacturas);
 
         let facturas = [];
+
+        let sem = eachWeekOfInterval(
+            {
+                start: new Date(ret.i2),
+                end: new Date(ret.f2)
+            },
+            {
+                weekStartsOn: 1
+            }
+        );
+        let mes = eachMonthOfInterval(
+            {
+                start: new Date(ret.i2),
+                end: new Date(ret.f2)
+            }
+        );
+        let semanas = [];
+        for (let i = 0; i < sem.length; i++) {
+            let start = startOfWeek(sem[i], { weekStartsOn: 1 });
+            let end = endOfWeek(sem[i], { weekStartsOn: 1 });
+            semanas.push([start, end]);
+        }
+        let meses = [];
+        for (let i = 0; i < mes.length; i++) {
+            let start = startOfMonth(mes[i], { weekStartsOn: 1 });
+            let end = endOfMonth(mes[i], { weekStartsOn: 1 });
+            meses.push([start, end]);
+        }
+
         for (let i = 0; i < result2.recordset.length; i++) {
             // let fecha = result2.recordset[i].date.replaceAll("-", "/");
 
@@ -92,6 +139,8 @@ export const getLiquidacionById = async (req, res) => {
                 result2.recordset[i].reembolso_monto,
                 result2.recordset[i].remanente_monto,
                 result2.recordset[i].razon_rechazo,
+                result2.recordset[i].del2,
+                result2.recordset[i].al2,
             ];
             facturas.push(row);
         }
@@ -101,12 +150,41 @@ export const getLiquidacionById = async (req, res) => {
         // Get presupesto vs real
         const result3 = await poolE
             .request()
-            .input('presupuesto', sql.BigInt, ret.au_gasto_id)
-            .input('del', sql.Date, ret.fecha_inicio)
-            .input('al', sql.Date, ret.fecha_fin)
-            .query(liquidacionesQueries.cuadrarPresupuesto);
+            .input('id', sql.BigInt, ret.au_gasto_id)
+            .query(liquidacionesQueries.getDetallePresupuesto);
 
-        ret.cuadrar = result3.recordset;
+        let cuadrar = result3.recordset;
+
+        for (let i = 0; i < cuadrar.length; i++) {
+            let fechs = [];
+            if (cuadrar[i].frecuencia_nombre.toLowerCase() === "semanal") {
+                fechs = [...semanas];
+            } else {
+                fechs = [...meses];
+            }
+
+            let cantidad = 0;
+            let total = 0;
+            for (let j = 0; j < fechs.length; j++) {
+                let ini = adjustDateToLocalTimeZoneDayString(fechs[j][0]);
+                let fin = adjustDateToLocalTimeZoneDayString(fechs[j][1]);
+                const result4 = await poolE
+                    .request()
+                    .input('id', sql.BigInt, cuadrar[i].id)
+                    .input('del', sql.Date, ini)
+                    .input('al', sql.Date, fin)
+                    .input('usuario', sql.BigInt, ret.uid)
+                    .query(liquidacionesQueries.getEjecutado);
+                console.log(cuadrar[i].id, ini, fin, ret.uid);
+                total += result4.recordset[0].total === null ? 0 : parseFloat(result4.recordset[0].total);
+                cantidad += result4.recordset[0].cantidad === null ? 0 : parseFloat(result4.recordset[0].cantidad);
+            }
+            cuadrar[i].total_real = total;
+            cuadrar[i].cantidad_real = cantidad;
+        }
+
+        ret.cuadrar = cuadrar;
+
         res.json(ret);
 
 
@@ -408,7 +486,6 @@ export const subirSAP = async (req, res) => {
             /******************************************************************************************************************************
              * Subimos la factura
              *******************************************************************************************************************************/
-            console.log(l.DocDate);
             header = `<Documents>
                             <row>
                                 <DocType>${l.DocType}</DocType>
@@ -427,10 +504,14 @@ export const subirSAP = async (req, res) => {
                                 <U_FacNom>${l.U_facNom}</U_FacNom>
                                 <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
                                 <U_TIPO_DOCUMENTO>${l.U_TIPO_DOCUMENTO}</U_TIPO_DOCUMENTO>
-                                <Comments>${l.Comentario}</Comments>
-                                <AttachmentEntry>${attachment}</AttachmentEntry>
-                            </row>
+                                <Comments>${l.Comentario}</Comments>`;
+            //Si si se subió el attachment
+            if (attachment > 0) {
+                header += `<AttachmentEntry>${attachment}</AttachmentEntry>`;
+            }
+            header += `</row>
                         </Documents>`;
+
             let body = `<row>
                             <ItemDescription>
                                 ${l.ItemDescription}
@@ -460,7 +541,7 @@ export const subirSAP = async (req, res) => {
                                 ${l.C4}
                             </CostingCode4>
                             <CostingCode5>
-                                ${l.C5}
+                                ${l.C5 > 0 ? l.C5 : ""}
                             </CostingCode5>
                         </row>`;
             if (parseFloat(l.exento) > 0) {
@@ -469,7 +550,7 @@ export const subirSAP = async (req, res) => {
                                 ${l.ItemDescription}
                             </ItemDescription>
                             <PriceAfterVAT>
-                                ${l.total - l.afecto}
+                                ${l.exento}
                             </PriceAfterVAT>
                             <AccountCode>
                                 ${l.exento_codigo}
@@ -493,7 +574,7 @@ export const subirSAP = async (req, res) => {
                                 ${l.C4}
                             </CostingCode4>
                             <CostingCode5>
-                                ${l.C5}
+                                ${l.C5 > 0 ? l.C5 : ""}
                             </CostingCode5>
                         </row>`;
             }
@@ -687,20 +768,6 @@ export const calculoFactura = async (req, res) => {
     let reembolso = 0;
     let remanente = 0;
 
-    await deleteFactura(
-        id,
-        v[22],
-        v[23],
-        v[24],
-        v[25],
-        v[31],
-        cantidad_presupuestada,
-        tipo,
-        v[0],
-        v[2]
-    );
-
-
     try {
         const pool = await getConnection();
         const result = await pool
@@ -725,7 +792,6 @@ export const calculoFactura = async (req, res) => {
 
         // Obtenemos el sobrante de la factura que estamos ingresando
         let sobrante = cantidad_presupuestada - suma_cantidad;
-        console.log(sobrante, cantidad_presupuestada, suma_cantidad);
         // sobrante = sobrante < 0 ? 0 : sobrante;
         if (sobrante >= total) {
             reembolso = total;
@@ -794,6 +860,19 @@ export const calculoFactura = async (req, res) => {
             .input('au_usuario_id', sql.BigInt, v[31])
             .query(liquidacionesQueries.addFactura);
 
+        await deleteFactura(
+            id,
+            v[22],
+            v[23],
+            v[24],
+            v[25],
+            v[31],
+            cantidad_presupuestada,
+            tipo,
+            v[0],
+            v[2]
+        );
+
         res.json(true);
     } catch (err) {
         res.status(500);
@@ -819,7 +898,31 @@ const deleteFactura = async (
         .request()
         .input('id', sql.Int, id)
         .query(liquidacionesQueries.deleteFacturaById);
+    updateRemanente(
+        del,
+        al,
+        au_presupuesto_id,
+        au_detalle_presupuesto_id,
+        au_usuario_id,
+        presupuesto_monto,
+        tipo,
+        gasto_value,
+        sub_gasto_value
+    );
 
+};
+const updateRemanente = async (
+    del,
+    al,
+    au_presupuesto_id,
+    au_detalle_presupuesto_id,
+    au_usuario_id,
+    presupuesto_monto,
+    tipo,
+    gasto_value,
+    sub_gasto_value
+) => {
+    const pool = await getConnection();
     const result = await pool
         .request()
         .input('del', sql.Date, new Date(del))
@@ -833,6 +936,7 @@ const deleteFactura = async (
 
     let suma_cantidad = presupuesto_monto;
     for (let i = 0; i < result.recordset.length; i++) {
+        let id = result.recordset[i].id;
         let tot = 0;
         if (tipo === "dinero") {
             suma_cantidad -= parseFloat(result.recordset[i].total);
@@ -859,7 +963,7 @@ const deleteFactura = async (
             .input('id', id)
             .query(liquidacionesQueries.updateFacturasById);
     }
-};
+}
 export const deleteFacturaByID = async (req, res) => {
     const {
         id
@@ -873,16 +977,6 @@ export const deleteFacturaByID = async (req, res) => {
             .request()
             .input('id', sql.BigInt, id)
             .query(liquidacionesQueries.getFactura);
-
-        // let ini = result.recordset[0].del.split('-');
-        // ini = ini[2]+"-"+ini[1]+ini[0];
-        // let fin = result.recordset[0].al.split('-');
-        // fin = fin[2]+"-"+fin[1]+fin[0];
-
-        // let ini = new Date(result.recordset[0].del);
-        // ini = ini.getFullYear() + '-' + ("0" + (ini.getMonth() + 1)).slice(-2) + "-" + ini.getDate();
-        // let fin = new Date(result.recordset[0].al);
-        // fin = fin.getFullYear() + '-' + ("0" + (fin.getMonth() + 1)).slice(-2) + "-" + fin.getDate();
 
         await deleteFactura(
             id,

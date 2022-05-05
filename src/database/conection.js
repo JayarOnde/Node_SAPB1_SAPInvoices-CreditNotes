@@ -10,19 +10,20 @@ const dbsettings = {
         trustServerCertificate: true,
         encrypt: false //for azure
     },
-    port: 1433
+    port: 1433,
+    useUTC: false
 };
 
 
-export async function getConnection(){
-    try{
+export async function getConnection() {
+    try {
         const pool = new sql.ConnectionPool(dbsettings);
         pool.on('error', err => {
             console.log('sql errors', err);
         });
         await pool.connect();
         return pool;
-    }catch(error){
+    } catch (error) {
         console.log(error);
     }
 }
