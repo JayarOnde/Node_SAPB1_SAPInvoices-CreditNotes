@@ -253,6 +253,11 @@ export const deleteLiquidacionById = async (req, res) => {
             .input('id', sql.Int, id)
             .query(liquidacionesQueries.deleteLiquidacionById);
 
+        const result2 = await pool
+            .request()
+            .input('id', sql.Int, id)
+            .query(liquidacionesQueries.deleteLiquidacionDetalleById);
+
         res.json({ msg: "Liquidación eliminada exitosamente!" });
     } catch (err) {
         res.status(500);
@@ -656,6 +661,28 @@ export const subirSAP = async (req, res) => {
          *******************************************************************************************************************************/
         let l = result2.recordset[result2.recordset.length - 1];
         if (credito > 0) {
+            header = `<Documents>
+                            <row>
+                                <DocType>${l.DocType}</DocType>
+                                <DocDate>${l.DocDate}</DocDate>
+                                <DocDueDate>${l.DocDueDate}</DocDueDate>
+                                <TaxDate>${l.DocTaxDate}</TaxDate>
+                                <CardCode>${l.CardCode}</CardCode>
+                                <NumAtCard>${l.NumAtCard}</NumAtCard>
+                                <DocCurrency>${l.DocCurrency}</DocCurrency>
+                                <SalesPersonCode>${l.SalesPersonCode}</SalesPersonCode>
+                                <U_FacFecha>${l.U_FacFecha}</U_FacFecha>
+                                <U_FacSerie>${l.U_FacSerie}</U_FacSerie>
+                                <U_FacNo>${l.U_FacNum}</U_FacNo>
+                                <U_FacNum>10</U_FacNum>
+                                <U_FacNit>${l.U_facNit.trim()}</U_FacNit>
+                                <U_FacNom>${l.U_facNom}</U_FacNom>
+                                <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
+                                <U_TIPO_DOCUMENTO>${l.U_TIPO_DOCUMENTO}</U_TIPO_DOCUMENTO>
+                                <U_STATUS_NC>A</U_STATUS_NC>
+                                <Comments>${l.Comentario}</Comments>
+                            </row>
+                        </Documents>`;
             let body = `<row>
                     <ItemDescription>
                         ${l.ItemDescription}

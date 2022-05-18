@@ -299,6 +299,7 @@ export const liquidacionesQueries = {
                             reembolso,
                             au.nombre usuario,
                             ag.id gasto_id,
+                            au.id id_usuario,
                             max(aue.au_empresa_id) empresa_id
                         from
                             au_liquidacion l
@@ -323,7 +324,11 @@ export const liquidacionesQueries = {
                                 join au_liquidacion l
                                     on u.id = l.au_usuario_id
                                 where 
-                                    u.supervisor = @user
+                                    (
+                                        u.supervisor = @user
+                                        and
+                                            l.au_estado_liquidacion_id =1
+                                    )
                                 or
                                     u.id=@user
                             )
@@ -337,24 +342,25 @@ export const liquidacionesQueries = {
                             no_aplica,
                             reembolso,
                             au.nombre,
-                            ag.id`,
+                            ag.id,
+                            au.id`,
     getLiquidacionesContador: `select
-                                l.id value,select
-                                l.id value,
-                                convert(varchar,
-                                fecha_inicio,
-                                103) label,
-                                convert(varchar,
-                                fecha_fin,
-                                103) fecha_fin,
-                                au_estado_liquidacion_id,
-                                e.nombre estado,
-                                total_facturado,
-                                no_aplica,
-                                reembolso,
-                                au.nombre usuario,
-                                ag.id gasto_id,
-                                max(aue.au_empresa_id) empresa_id
+                                    l.id value,
+                                    convert(varchar,
+                                            fecha_inicio,
+                                        103) label,
+                                    convert(varchar,
+                                            fecha_fin,
+                                        103) fecha_fin,
+                                    au_estado_liquidacion_id,
+                                    e.nombre estado,
+                                    total_facturado,
+                                    no_aplica,
+                                    reembolso,
+                                    au.nombre usuario,
+                                    ag.id gasto_id,
+                                    au.id id_usuario,
+                                    max(aue.au_empresa_id) empresa_id
                             from
                                 au_liquidacion l
                             join au_usuario au 
@@ -396,7 +402,8 @@ export const liquidacionesQueries = {
                                 no_aplica,
                                 reembolso,
                                 au.nombre,
-                                ag.id`,
+                                ag.id,
+                                au.id`,
     addLiquidacion: `insert into au_liquidacion (au_usuario_id,au_gasto_id,au_gasto_label,fecha_inicio,fecha_fin,total_facturado,no_aplica,reembolso,comentario)
                       values (@au_usuario_id,@au_gasto_id,@au_gasto_label,@fecha_inicio,@fecha_fin,@total_facturado,@no_aplica,@reembolso,@comentario);SELECT SCOPE_IDENTITY() AS id;`,
     getLiquidacionById: `select
@@ -512,6 +519,7 @@ export const liquidacionesQueries = {
                   from au_liquidacion_detalle
                   where id=@id`,
     deleteLiquidacionById: 'delete from au_liquidacion where id = @id;',
+    deleteLiquidacionDetalleById: 'delete from au_liquidacion_detalle where au_liquidacion_id = @id;',
     liquidacionAprobacionSupervisor: 'update au_liquidacion set au_estado_liquidacion_id = 1 where id = @id;',
     getGastosByUserLiquidacion: `select 
                                     ag.id value,
