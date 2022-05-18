@@ -18,7 +18,8 @@ export const queries = {
                 u.id,
                 u.nombre,
                 u.password,
-                ar.nombre rol
+                ar.nombre rol,
+                ar.id rol_id
             from
                 au_usuario u
             join au_usuario_rol aur  on u.id = aur.au_usuario_id 
@@ -313,7 +314,20 @@ export const liquidacionesQueries = {
                         join au_estado_liquidacion e
                         on
                             l.au_estado_liquidacion_id = e.id
-                            group by
+                        where
+                            l.id in (
+                                select
+                                    l.id
+                                from 
+                                    au_usuario u
+                                join au_liquidacion l
+                                    on u.id = l.au_usuario_id
+                                where 
+                                    u.supervisor = @user
+                                or
+                                    u.id=@user
+                            )
+                        group by
                             l.id,
                             fecha_inicio,
                             fecha_fin,
@@ -324,6 +338,65 @@ export const liquidacionesQueries = {
                             reembolso,
                             au.nombre,
                             ag.id`,
+    getLiquidacionesContador: `select
+                                l.id value,select
+                                l.id value,
+                                convert(varchar,
+                                fecha_inicio,
+                                103) label,
+                                convert(varchar,
+                                fecha_fin,
+                                103) fecha_fin,
+                                au_estado_liquidacion_id,
+                                e.nombre estado,
+                                total_facturado,
+                                no_aplica,
+                                reembolso,
+                                au.nombre usuario,
+                                ag.id gasto_id,
+                                max(aue.au_empresa_id) empresa_id
+                            from
+                                au_liquidacion l
+                            join au_usuario au 
+                                                    on
+                                l.au_usuario_id = au.id
+                            left join au_presupuesto ag 
+                                                    on
+                                ag.id = l.au_gasto_id
+                            left join au_usuario_empresa aue 
+                                                    on
+                                l.au_usuario_id = aue.au_usuario_id
+                            join au_estado_liquidacion e
+                                                    on
+                                l.au_estado_liquidacion_id = e.id
+                            where
+                                l.id in (
+                                select
+                                    l2.id
+                                from
+                                    au_usuario u
+                                join au_liquidacion l2
+                                                                on
+                                    u.id = l2.au_usuario_id
+                                where
+                                    (
+                                        l2.au_estado_liquidacion_id = 3
+                                        and
+                                        u.id != @user
+                                    )
+                                    or u.id = @user
+                            )
+                            group by
+                                l.id,
+                                fecha_inicio,
+                                fecha_fin,
+                                au_estado_liquidacion_id,
+                                e.nombre,
+                                total_facturado,
+                                no_aplica,
+                                reembolso,
+                                au.nombre,
+                                ag.id`,
     addLiquidacion: `insert into au_liquidacion (au_usuario_id,au_gasto_id,au_gasto_label,fecha_inicio,fecha_fin,total_facturado,no_aplica,reembolso,comentario)
                       values (@au_usuario_id,@au_gasto_id,@au_gasto_label,@fecha_inicio,@fecha_fin,@total_facturado,@no_aplica,@reembolso,@comentario);SELECT SCOPE_IDENTITY() AS id;`,
     getLiquidacionById: `select

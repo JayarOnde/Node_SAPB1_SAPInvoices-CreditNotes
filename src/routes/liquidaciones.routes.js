@@ -19,7 +19,7 @@ import {
 const router = Router();
 
 // Routes
-router.get('/liquidaciones', getLiquidaciones);
+router.get('/liquidaciones/:user/:type', getLiquidaciones);
 
 router.post('/liquidacion', addLiquidacion);
 

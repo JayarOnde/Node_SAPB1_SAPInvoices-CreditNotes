@@ -300,7 +300,8 @@ export const login = async (req, res) => {
                 res.json({
                     id: result.recordset[0].id,
                     nombre: result.recordset[0].nombre,
-                    rol: result.recordset[0].rol
+                    rol: result.recordset[0].rol,
+                    rol_id: result.recordset[0].rol_id,
                 });
             } else {
                 res.status(400);

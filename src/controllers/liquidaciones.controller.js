@@ -16,11 +16,23 @@ import {
 import { promises as fs } from 'fs'
 import sql from 'mssql';
 export const getLiquidaciones = async (req, res) => {
+    const { user, type } = req.params;
     try {
         const pool = await getConnection();
-        const result = await pool
-            .request()
-            .query(liquidacionesQueries.getLiquidaciones);
+        let result = null;
+        // Contador
+        if (parseInt(type) === 3) {
+            result = await pool
+                .request()
+                .input('user', sql.BigInt, user)
+                .query(liquidacionesQueries.getLiquidacionesContador);
+        } else {
+            // Los otros
+            result = await pool
+                .request()
+                .input('user', sql.BigInt, user)
+                .query(liquidacionesQueries.getLiquidaciones);
+        }
         res.json(result.recordset);
     } catch (err) {
         res.status(500);
@@ -673,7 +685,7 @@ export const subirSAP = async (req, res) => {
                         ${l.C4}
                     </CostingCode4>
                     <CostingCode5>
-                        ${l.C5}
+                        ${l.C5 > 0 ? l.C5 : ""}
                     </CostingCode5>
                 </row>`;
             let envelope = `<?xml version="1.0" encoding="utf-8"?>
@@ -706,6 +718,7 @@ export const subirSAP = async (req, res) => {
                 },
                 data: envelope
             };
+
             let response3 = await axios(config);
 
             let r3 = JSON.parse(xmlParser.toJson(response3.data));
