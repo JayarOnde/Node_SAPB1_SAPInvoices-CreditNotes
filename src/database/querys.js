@@ -627,6 +627,7 @@ export const liquidacionesQueries = {
                                 '') + ' - ' + ald.numero ,
                                 DocCurrency = RTRIM(ap.moneda_codigo),
                                 SalesPersonCode = aue.codigo_usuario_sap,
+                                SalesPersonName = aue.nombre_usuario_sap,
                                 U_FacFecha = CONVERT(VARCHAR(8), ald.[date],112) ,
                                 U_FacSerie = coalesce(ald.serie ,
                                 '') ,
@@ -695,6 +696,8 @@ export const liquidacionesQueries = {
                             inner join au_usuario_empresa_presupuesto auep
                                                         on
                                 auep.presupuesto = ald.au_presupuesto_id
+                                and
+									auep.au_usuario_id = al.au_usuario_id
                             WHERE
                                 al.id = @id
                             order by

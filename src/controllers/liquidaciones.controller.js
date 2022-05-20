@@ -675,8 +675,8 @@ export const subirSAP = async (req, res) => {
                                 <U_FacSerie>${l.U_FacSerie}</U_FacSerie>
                                 <U_FacNo>${l.U_FacNum}</U_FacNo>
                                 <U_FacNum>10</U_FacNum>
-                                <U_FacNit>${l.U_facNit.trim()}</U_FacNit>
-                                <U_FacNom>${l.U_facNom}</U_FacNom>
+                                <U_FacNit>0000000000</U_FacNit>
+                                <U_FacNom>${l.SalesPersonName}</U_FacNom>
                                 <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
                                 <U_TIPO_DOCUMENTO>${l.U_TIPO_DOCUMENTO}</U_TIPO_DOCUMENTO>
                                 <U_STATUS_NC>A</U_STATUS_NC>
