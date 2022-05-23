@@ -411,7 +411,8 @@ export const liquidacionesQueries = {
                             u.nombre,
                             u.id uid,
                             CONVERT(VARCHAR(26), l.fecha_inicio,23) i2,
-                            CONVERT(VARCHAR(26), l.fecha_fin,23) f2
+                            CONVERT(VARCHAR(26), l.fecha_fin,23) f2,
+                            u.supervisor
                         from
                             au_liquidacion l
                         inner join au_usuario u 
