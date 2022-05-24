@@ -11,7 +11,8 @@ import {
     endOfWeek,
     startOfMonth,
     endOfMonth,
-    format
+    format,
+    endOfHour
 } from 'date-fns'
 import { promises as fs } from 'fs'
 import sql from 'mssql';
@@ -653,7 +654,7 @@ export const subirSAP = async (req, res) => {
             }
             fs.unlink(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType);
             if ((l.PriceAfVAT - l.exento) > 0) {
-                credito += l.remanente_monto;
+                credito += l.reembolso_monto;
             }
         }
         /******************************************************************************************************************************
@@ -683,38 +684,44 @@ export const subirSAP = async (req, res) => {
                                 <Comments>${l.Comentario}</Comments>
                             </row>
                         </Documents>`;
-            let body = `<row>
-                    <ItemDescription>
-                        ${l.ItemDescription}
-                    </ItemDescription>
-                    <PriceAfterVAT>
-                        ${credito}
-                    </PriceAfterVAT>
-                    <AccountCode>
-                        ${l.afecto_codigo}
-                    </AccountCode>
-                    <TaxCode>
-                        ${l.remanente_impuesto_nombre.split('-')[0].trim()}
-                    </TaxCode>
-                    <ProjectCode>
-                        ${l.Proyecto}
-                    </ProjectCode>
-                    <CostingCode>
-                        ${l.C1}
-                    </CostingCode>
-                    <CostingCode2>
-                        ${l.C2}
-                    </CostingCode2>
-                    <CostingCode3>
-                        ${l.C3}
-                    </CostingCode3>
-                    <CostingCode4>
-                        ${l.C4}
-                    </CostingCode4>
-                    <CostingCode5>
-                        ${l.C5 > 0 ? l.C5 : ""}
-                    </CostingCode5>
-                </row>`;
+            let body2 = '';
+            for (let i = 0; i < result2.recordset.length; i++) {
+                let l2 = result2.recordset[i];
+                if (parseFloat(l2.reembolso_monto) > 0) {
+                    body2 += `<row>
+                        <ItemDescription>
+                            ${l2.ItemDescription}
+                        </ItemDescription>
+                        <PriceAfterVAT>
+                            ${l2.reembolso_monto}
+                        </PriceAfterVAT>
+                        <AccountCode>
+                            ${l2.remanente_codigo}
+                        </AccountCode>
+                        <TaxCode>
+                            ${l2.remanente_impuesto_nombre.split('-')[0].trim()}
+                        </TaxCode>
+                        <ProjectCode>
+                            ${l2.Proyecto}
+                        </ProjectCode>
+                        <CostingCode>
+                            ${l2.C1}
+                        </CostingCode>
+                        <CostingCode2>
+                            ${l2.C2}
+                        </CostingCode2>
+                        <CostingCode3>
+                            ${l2.C3}
+                        </CostingCode3>
+                        <CostingCode4>
+                            ${l2.C4}
+                        </CostingCode4>
+                        <CostingCode5>
+                            ${l2.C5 > 0 ? l2.C5 : ""}
+                        </CostingCode5>
+                    </row>`;
+                }
+            }
             let envelope = `<?xml version="1.0" encoding="utf-8"?>
                         <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
                             <soap12:Body>
@@ -728,7 +735,7 @@ export const subirSAP = async (req, res) => {
                                                 </AdmInfo>
                                                 ${header}
                                                 <Document_Lines>
-                                                    ${body}
+                                                    ${body2}
                                                 </Document_Lines>
                                             </BO>
                                         </BOM>]]>

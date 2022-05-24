@@ -661,7 +661,8 @@ export const liquidacionesQueries = {
                                 ag.exento_impuesto_nombre,
                                 ag.afecto_impuesto_nombre,
                                 ag.remanente_impuesto_nombre,
-                                ald.remanente_monto
+                                ald.remanente_monto,
+                                ald.reembolso_monto
                             from
                                 au_liquidacion al
                             inner join au_liquidacion_detalle ald 
