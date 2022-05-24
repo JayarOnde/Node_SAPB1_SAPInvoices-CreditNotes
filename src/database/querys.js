@@ -361,21 +361,21 @@ export const liquidacionesQueries = {
                                     ag.id gasto_id,
                                     au.id id_usuario,
                                     max(aue.au_empresa_id) empresa_id
-                            from
+                                from
                                 au_liquidacion l
-                            join au_usuario au 
+                                join au_usuario au 
                                                     on
                                 l.au_usuario_id = au.id
-                            left join au_presupuesto ag 
+                                left join au_presupuesto ag 
                                                     on
                                 ag.id = l.au_gasto_id
-                            left join au_usuario_empresa aue 
+                                left join au_usuario_empresa aue 
                                                     on
                                 l.au_usuario_id = aue.au_usuario_id
-                            join au_estado_liquidacion e
+                                join au_estado_liquidacion e
                                                     on
                                 l.au_estado_liquidacion_id = e.id
-                            where
+                                where
                                 l.id in (
                                 select
                                     l2.id
@@ -388,11 +388,12 @@ export const liquidacionesQueries = {
                                     (
                                         l2.au_estado_liquidacion_id = 3
                                         and
-                                        u.id != @user
+                                            u.id != @user
+                                        and aue.au_empresa_id in (select au_empresa_id from au_usuario_empresa where au_usuario_id = @user)
                                     )
                                     or u.id = @user
-                            )
-                            group by
+                                )
+                                group by
                                 l.id,
                                 fecha_inicio,
                                 fecha_fin,
