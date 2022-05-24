@@ -818,7 +818,6 @@ export const calculoFactura = async (req, res) => {
             .input('au_detalle_presupuesto_id', sql.BigInt, v[25])
             .input('au_usuario_id', sql.BigInt, v[31])
             .input('gasto_value', sql.BigInt, v[0])
-            .input('sub_gasto_value', sql.BigInt, v[2])
             .query(liquidacionesQueries.obtener_detalle);
 
         let suma_cantidad = 0;

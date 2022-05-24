@@ -576,8 +576,6 @@ export const liquidacionesQueries = {
                         and
                             gasto_value = @gasto_value
                         and
-                            sub_gasto_value = @sub_gasto_value
-                        and
                             au_usuario_id = @au_usuario_id
                     order by 
                         id asc`,
