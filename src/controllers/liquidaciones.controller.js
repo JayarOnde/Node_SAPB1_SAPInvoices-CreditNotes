@@ -188,7 +188,7 @@ export const getLiquidacionById = async (req, res) => {
                     .input('al', sql.Date, fin)
                     .input('usuario', sql.BigInt, ret.uid)
                     .query(liquidacionesQueries.getEjecutado);
-                console.log(cuadrar[i].id, ini, fin, ret.uid);
+                // console.log(cuadrar[i].id, ini, fin, ret.uid);
                 total += result4.recordset[0].total === null ? 0 : parseFloat(result4.recordset[0].total);
                 cantidad += result4.recordset[0].cantidad === null ? 0 : parseFloat(result4.recordset[0].cantidad);
             }
@@ -638,12 +638,12 @@ export const subirSAP = async (req, res) => {
                     .query(queriesSAP.getDocNumInv);
 
                 log += `<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']} DocNum: ${result2.recordset[0].DocNum}<br>`;
-                console.log(`<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']} DocNum: ${result2.recordset[0].DocNum}<br>`);
+                // console.log(`<strong>Factura</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey']} DocNum: ${result2.recordset[0].DocNum}<br>`);
 
                 updateFacturaSAP(l.IDLiquidacionDetalle, r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['AddObjectResponse']['RetKey'], result2.recordset[0].DocNum);
             } else {
                 log += `<strong>Factura Error</strong>: ${r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']}<br>`;
-                console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
+                // console.log(r2["soap:Envelope"]["soap:Body"]['AddPurchaseOrderResponse']['AddPurchaseOrderResult']['env:Envelope']['env:Body']['env:Fault']['env:Reason']['env:Text']['$t']);
                 err = 1;
             }
             /******************************************************************************************************************************
@@ -654,7 +654,7 @@ export const subirSAP = async (req, res) => {
             }
             fs.unlink(path_upload_ + "\\" + l.IDLiquidacionDetalle + '-' + ts + '.' + mimeType);
             if ((l.PriceAfVAT - l.exento) > 0) {
-                credito += l.reembolso_monto;
+                credito += l.remanente_monto;
             }
         }
         /******************************************************************************************************************************
@@ -687,13 +687,13 @@ export const subirSAP = async (req, res) => {
             let body2 = '';
             for (let i = 0; i < result2.recordset.length; i++) {
                 let l2 = result2.recordset[i];
-                if (parseFloat(l2.reembolso_monto) > 0) {
+                if (parseFloat(l2.remanente_monto) > 0) {
                     body2 += `<row>
                         <ItemDescription>
                             ${l2.ItemDescription}
                         </ItemDescription>
                         <PriceAfterVAT>
-                            ${l2.reembolso_monto}
+                            ${l2.remanente_monto}
                         </PriceAfterVAT>
                         <AccountCode>
                             ${l2.remanente_codigo}
