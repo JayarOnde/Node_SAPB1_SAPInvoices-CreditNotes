@@ -332,6 +332,7 @@ export const liquidacionesQueries = {
                                 or
                                     u.id=@user
                             )
+                            and l.au_estado_liquidacion_id!=5
                         group by
                             l.id,
                             fecha_inicio,
@@ -376,23 +377,24 @@ export const liquidacionesQueries = {
                                                     on
                                 l.au_estado_liquidacion_id = e.id
                                 where
-                                l.id in (
-                                select
-                                    l2.id
-                                from
-                                    au_usuario u
-                                join au_liquidacion l2
-                                                                on
-                                    u.id = l2.au_usuario_id
-                                where
-                                    (
-                                        l2.au_estado_liquidacion_id = 3
-                                        and
-                                            u.id != @user
-                                        and aue.au_empresa_id in (select au_empresa_id from au_usuario_empresa where au_usuario_id = @user)
+                                    l.id in (
+                                        select
+                                            l2.id
+                                        from
+                                            au_usuario u
+                                        join au_liquidacion l2
+                                                                        on
+                                            u.id = l2.au_usuario_id
+                                        where
+                                            (
+                                                l2.au_estado_liquidacion_id = 3
+                                                and
+                                                    u.id != @user
+                                                and aue.au_empresa_id in (select au_empresa_id from au_usuario_empresa where au_usuario_id = @user)
+                                            )
+                                            or u.id = @user
                                     )
-                                    or u.id = @user
-                                )
+                                    and l.au_estado_liquidacion_id!=5
                                 group by
                                 l.id,
                                 fecha_inicio,
@@ -703,7 +705,18 @@ export const liquidacionesQueries = {
                                 al.id = @id
                             order by
                                 IDLiquidacionDetalle`,
-    cerrarLiquidacion: `update au_liquidacion set au_estado_liquidacion_id = 3, resultados_subida_sap=@resultados,rechazo_contabilidad='' where id = @id;`,
+    cerrarLiquidacion: `update au_liquidacion 
+                            set au_estado_liquidacion_id = 5, 
+                                resultados_subida_sap=@resultados,
+                                rechazo_contabilidad='' 
+                            where 
+                                id = @id;
+                        update au_liquidacion_detalle 
+                        set 
+                            factura='', 
+                            xml='' 
+                        where 
+                            au_liquidacion_id=@id`,
     updateLiquidacionSAP: `update au_liquidacion
                         set DocEntry=@DocEntry,
                         DocNum=@DocNum
