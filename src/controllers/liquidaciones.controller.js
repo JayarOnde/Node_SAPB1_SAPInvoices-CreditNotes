@@ -789,7 +789,7 @@ export const subirSAP = async (req, res) => {
                 .request()
                 .input('id', sql.Int, id)
                 .input('resultados', sql.Text, log)
-                .query(liquidacionesQueries.cerrarLiquidacion);
+                .query(liquidacionesQueries.cerrarLiquidacionError);
             res.json(false);
         }
     } catch (err) {

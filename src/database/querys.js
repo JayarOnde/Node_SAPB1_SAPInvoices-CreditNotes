@@ -717,6 +717,11 @@ export const liquidacionesQueries = {
                             xml='' 
                         where 
                             au_liquidacion_id=@id`,
+    cerrarLiquidacionError: `update au_liquidacion 
+                            set resultados_subida_sap=@resultados,
+                                rechazo_contabilidad='' 
+                            where 
+                                id = @id;`,
     updateLiquidacionSAP: `update au_liquidacion
                         set DocEntry=@DocEntry,
                         DocNum=@DocNum
