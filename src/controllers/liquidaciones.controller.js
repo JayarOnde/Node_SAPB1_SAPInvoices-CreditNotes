@@ -516,13 +516,14 @@ export const subirSAP = async (req, res) => {
                                 <SalesPersonCode>${l.SalesPersonCode}</SalesPersonCode>
                                 <U_FacFecha>${l.U_FacFecha}</U_FacFecha>
                                 <U_FacSerie>${l.U_FacSerie}</U_FacSerie>
-                                <U_FacNo>${l.U_FacNum}</U_FacNo>
-                                <U_FacNum>10</U_FacNum>
+                                <U_FacNo>${l.U_FacNum.substring(l.U_FacNum.length - 7)}</U_FacNo>
                                 <U_FacNit>${l.U_facNit.trim()}</U_FacNit>
                                 <U_FacNom>${l.U_facNom}</U_FacNom>
                                 <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
                                 <U_TIPO_DOCUMENTO>${l.U_TIPO_DOCUMENTO}</U_TIPO_DOCUMENTO>
-                                <Comments>${l.Comentario}</Comments>`;
+                                <U_UUID>${l.uuid}</U_UUID>
+                                <U_UDF_UUID>${l.uuid}</U_UDF_UUID>
+                                <Comments>${l.Comentario} ${l.comentarios}</Comments>`;
             //Si si se subió el attachment
             if (attachment > 0) {
                 header += `<AttachmentEntry>${attachment}</AttachmentEntry>`;
