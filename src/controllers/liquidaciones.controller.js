@@ -422,6 +422,12 @@ export const subirSAP = async (req, res) => {
         let credito = 0;
         let header = ``;
         let err = 0;
+
+        if (result2.recordset.length === 0) {
+            res.json(false);
+            return;
+        }
+
         for (let i = 0; i < result2.recordset.length; i++) {
             let l = result2.recordset[i];
 
@@ -518,7 +524,7 @@ export const subirSAP = async (req, res) => {
                                 <U_FacSerie>${l.U_FacSerie}</U_FacSerie>
                                 <U_FacNo>${l.U_FacNum.substring(l.U_FacNum.length - 7)}</U_FacNo>
                                 <U_FacNit>${l.U_facNit.trim()}</U_FacNit>
-                                <U_FacNom>${l.U_facNom}</U_FacNom>
+                                <U_FacNom>${l.U_facNom.replace(/&/g, "")}</U_FacNom>
                                 <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
                                 <U_TIPO_DOCUMENTO>${l.U_TIPO_DOCUMENTO}</U_TIPO_DOCUMENTO>
                                 <U_UUID>${l.uuid}</U_UUID>
@@ -619,6 +625,9 @@ export const subirSAP = async (req, res) => {
                                     </AddPurchaseOrder>
                                 </soap12:Body>
                             </soap12:Envelope>`;
+            // console.log(envelope);
+            // res.json(true);
+            // return;
             config = {
                 method: 'post',
                 url: `http://${e.servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
@@ -678,7 +687,7 @@ export const subirSAP = async (req, res) => {
                                 <U_FacNo>${l.U_FacNum}</U_FacNo>
                                 <U_FacNum>10</U_FacNum>
                                 <U_FacNit>0000000000</U_FacNit>
-                                <U_FacNom>${l.SalesPersonName}</U_FacNom>
+                                <U_FacNom>${l.SalesPersonName.replace(/&/g, "")}</U_FacNom>
                                 <U_Clase_LibroCV>${l.U_Clase_LibroCV}</U_Clase_LibroCV>
                                 <U_TIPO_DOCUMENTO>${l.U_TIPO_DOCUMENTO}</U_TIPO_DOCUMENTO>
                                 <U_STATUS_NC>A</U_STATUS_NC>

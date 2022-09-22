@@ -617,7 +617,9 @@ export const liquidacionesQueries = {
                                     and day(ald.[date]) >= COALESCE(ae.dia_efectivo_ajuste ,
                                     0) then 
                                                                                         cast(year(dateadd(month, 1, ald.[date])) as varchar) 
-                                                                                        + cast(month(dateadd(month, 1, ald.[date])) as varchar) 
+                                                                                        + case when month(dateadd(month, 1, ald.[date])) < 10 then '0'
+                                                                                        else '' end 
+                                                                                        +  cast(month(dateadd(month, 1, ald.[date])) as varchar) 
                                                                                         + '01'
                                     else
                                     CONVERT(VARCHAR(8), ald.[date],112)
@@ -631,8 +633,7 @@ export const liquidacionesQueries = {
                                 SalesPersonCode = aue.codigo_usuario_sap,
                                 SalesPersonName = aue.nombre_usuario_sap,
                                 U_FacFecha = CONVERT(VARCHAR(8), ald.[date],112) ,
-                                U_FacSerie = coalesce(ald.serie ,
-                                '') ,
+                                U_FacSerie = left(coalesce(ald.serie ,''),3) ,
                                 U_FacNum = ald.numero ,
                                 U_facNit = ap3.nit ,
                                 U_facNom = ap2.nombre,
@@ -676,9 +677,6 @@ export const liquidacionesQueries = {
                             inner join au_presupuesto ap  
                                                             on
                                 al.au_gasto_id = ap.id
-                            inner join au_detalle_presupuesto adp 
-                                                            on
-                                adp.id = ald.au_detalle_presupuesto_id
                             inner join au_gasto ag 
                                                             on
                                 ald.gasto_value = ag.id
@@ -705,6 +703,12 @@ export const liquidacionesQueries = {
 									auep.au_usuario_id = al.au_usuario_id
                             WHERE
                                 al.id = @id
+                            and
+								ald.DocEntry is null
+                            and
+                                ald.factura is not null
+                            and
+                                datalength(ald.factura) >0
                             order by
                                 IDLiquidacionDetalle`,
     cerrarLiquidacion: `update au_liquidacion 
@@ -719,6 +723,11 @@ export const liquidacionesQueries = {
                             xml='' 
                         where 
                             au_liquidacion_id=@id`,
+    // cerrarLiquidacion: `update au_liquidacion 
+    //                         set resultados_subida_sap=@resultados,
+    //                             rechazo_contabilidad='' 
+    //                         where 
+    //                             id = @id;`,
     cerrarLiquidacionError: `update au_liquidacion 
                             set resultados_subida_sap=@resultados,
                                 rechazo_contabilidad='' 

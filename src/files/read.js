@@ -7,30 +7,30 @@ var sql = require('mssql');
 var log = [];
 
 // Production
-// const dbsettings = {
-//     user: 'sa',
-//     password: `Mobil2011`,
-//     server: '192.168.168.9',
-//     database: 'Liquidaciones',
-//     options: {
-//         trustServerCertificate: true,
-//         encrypt: false //for azure
-//     },
-//     port: 1433
-// };
-
-// Test
 const dbsettings = {
     user: 'sa',
-    password: `123`,
-    server: '192.168.1.197',
-    database: 'liquidaciones',
+    password: `Mobil2011`,
+    server: '172.16.201.6',
+    database: 'Liquidaciones',
     options: {
         trustServerCertificate: true,
         encrypt: false //for azure
     },
     port: 1433
 };
+
+// Test
+// const dbsettings = {
+// user: 'sa',
+// password: `123`,
+// server: '192.168.1.197',
+// database: 'liquidaciones',
+// options: {
+// trustServerCertificate: true,
+// encrypt: false //for azure
+// },
+// port: 1433
+// };
 
 const writeLog = async (data) => {
     fs.appendFile('./banklog.txt', data + "\n", function (err) {
@@ -66,11 +66,11 @@ const getEmpresas = async () => {
         await pool.connect();
 
         const query = `select
-                  *
-              from
-                  au_empresa
-              where 
-                  bancos is not null`;
+                   *
+               from
+                   au_empresa
+               where 
+                   bancos is not null`;
         const result = await pool
             .query(query);
 
@@ -169,7 +169,10 @@ const readFiles = async (bankFolder, cuentas, empresa, ruta_archivos_bancos, lic
                                                 let info = [correlativo++];
                                                 info.push(c[0].sys);
                                                 let ammount = "";
-                                                if (trans[i].isExpense) {
+                                                // Si es expense isCredit viene false
+                                                // Si es credit isCredit viene true e isDebit true también
+                                                // por eso nos basamos en isCredit
+                                                if (!trans[i].isCredit) {
                                                     info.push(trans[i].amount);
                                                     info.push("");
                                                     ammount = `<DebitAmount>${trans[i].amount}</DebitAmount>`;
@@ -185,14 +188,14 @@ const readFiles = async (bankFolder, cuentas, empresa, ruta_archivos_bancos, lic
 
                                                 // license
                                                 let xml = `<?xml version="1.0" encoding="utf-8"?>
-                                                            <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-                                                            <soap12:Body>
-                                                                <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
-                                                                    <SessionID>${license}</SessionID>
-                                                                    <sXmlOrderObject><![CDATA[<BOM xmlns='http://www.sap.com/SBO/DIS'><BO><AdmInfo><Object>oBankPages</Object></AdmInfo><BankPages><row><AccountCode>${c[0].sys}</AccountCode>${ammount}<DueDate>${trans[i].valueDate.replace(/-/g, "")}</DueDate><Memo>${trans[i].code + " - " + trans[i].description}</Memo><Reference>${trans[i].customerReference}</Reference></row></BankPages></BO></BOM>]]></sXmlOrderObject>
-                                                                    </AddPurchaseOrder>
-                                                                </soap12:Body>
-                                                            </soap12:Envelope>`;
+                                                             <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+                                                             <soap12:Body>
+                                                                 <AddPurchaseOrder xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+                                                                     <SessionID>${license}</SessionID>
+                                                                     <sXmlOrderObject><![CDATA[<BOM xmlns='http://www.sap.com/SBO/DIS'><BO><AdmInfo><Object>oBankPages</Object></AdmInfo><BankPages><row><AccountCode>${c[0].sys}</AccountCode>${ammount}<DueDate>${trans[i].valueDate.replace(/-/g, "")}</DueDate><Memo>${trans[i].code + " - " + trans[i].description}</Memo><Reference>${trans[i].customerReference}</Reference></row></BankPages></BO></BOM>]]></sXmlOrderObject>
+                                                                     </AddPurchaseOrder>
+                                                                 </soap12:Body>
+                                                             </soap12:Envelope>`;
                                                 var config = {
                                                     method: 'post',
                                                     url: `http://${empresa.servidor_licencias}/wsSalesQuotation/DiServerServices.asmx?WSDL`,
@@ -215,6 +218,7 @@ const readFiles = async (bankFolder, cuentas, empresa, ruta_archivos_bancos, lic
                                                 }
 
                                                 writeOutput(info.join(','), ruta_archivos_bancos);
+                                                console.log(info.join(','), ruta_archivos_bancos);
                                             }
                                         });
                                         moveFile(bankFolder, file);
@@ -251,21 +255,21 @@ const connect = async (servidor_sql, base_sql, sap_db_type, usuario_sql, contras
 
     try {
         var data = `<?xml version="1.0" encoding="utf-8"?>
-        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-          <soap12:Body>
-            <Login xmlns="http://tempuri.org/wsSalesQuotation/Service1">
-              <DataBaseServer>${servidor_sql}</DataBaseServer>
-              <DataBaseName>${base_sql}</DataBaseName>
-              <DataBaseType>${sap_db_type}</DataBaseType>
-              <DataBaseUserName>${usuario_sql}</DataBaseUserName>
-              <DataBasePassword>${contrasena_sql}</DataBasePassword>
-              <CompanyUserName>${usuario_sap}</CompanyUserName>
-              <CompanyPassword>${contrasena_sap}</CompanyPassword>
-              <Language>ln_English</Language>
-              <LicenseServer>${servidor_licencias}:30000</LicenseServer>
-            </Login>
-          </soap12:Body>
-        </soap12:Envelope>`;
+         <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+           <soap12:Body>
+             <Login xmlns="http://tempuri.org/wsSalesQuotation/Service1">
+               <DataBaseServer>${servidor_sql}</DataBaseServer>
+               <DataBaseName>${base_sql}</DataBaseName>
+               <DataBaseType>${sap_db_type}</DataBaseType>
+               <DataBaseUserName>${usuario_sql}</DataBaseUserName>
+               <DataBasePassword>${contrasena_sql}</DataBasePassword>
+               <CompanyUserName>${usuario_sap}</CompanyUserName>
+               <CompanyPassword>${contrasena_sap}</CompanyPassword>
+               <Language>ln_English</Language>
+               <LicenseServer>${servidor_licencias}:30000</LicenseServer>
+             </Login>
+           </soap12:Body>
+         </soap12:Envelope>`;
 
         var config = {
             method: 'post',
